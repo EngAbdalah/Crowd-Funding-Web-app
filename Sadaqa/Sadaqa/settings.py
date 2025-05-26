@@ -11,6 +11,7 @@ https://docs.djangoproject.com/en/5.2/ref/settings/
 """
 
 from pathlib import Path
+import os
 
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
 BASE_DIR = Path(__file__).resolve().parent.parent
@@ -31,36 +32,65 @@ ALLOWED_HOSTS = []
 # Application definition
 
 INSTALLED_APPS = [
-    'django.contrib.admin',
-    'django.contrib.auth',
-    'django.contrib.contenttypes',
-    'django.contrib.sessions',
-    'django.contrib.messages',
-    'django.contrib.staticfiles',
+    # Django core apps
+    "django.contrib.admin",
+    "django.contrib.auth",
+    "django.contrib.contenttypes",
+    "django.contrib.sessions",
+    "django.contrib.messages",
+    "django.contrib.staticfiles",
+    "django.contrib.sites",  # Added sites framework
+
+    
+    "phonenumber_field",  # Adds phone number validation and formatting.
+    "django_countries",  # Simplifies country dropdowns and data storage (e.g., "EG" for Egypt).
+    # need to install pip install django-allauth to use the apps below
+    "allauth",  # Core library for authentication (logins, signups)
+    "allauth.account",  # Handles email/password-based accounts
+    "allauth.socialaccount",  # Manages social media logins (Facebook, Google, etc.)
+    "allauth.socialaccount.providers.facebook",  # Adds Facebook login support
+
+    # Local apps
+    "users.apps.UsersConfig",
 ]
 
+
+SOCIALACCOUNT_PROVIDERS = {
+    "facebook": {  # Configure Facebook login
+        "APP": {  # Link to your Facebook app
+            "client_id": "YOUR_FACEBOOK_APP_ID",  # Your Facebook app’s public ID
+            "secret": "YOUR_FACEBOOK_APP_SECRET",  # Your Facebook app’s private key
+            "scope": "email",  # Ask Facebook for the user’s email address
+        }
+    }
+}
 MIDDLEWARE = [
-    'django.middleware.security.SecurityMiddleware',
-    'django.contrib.sessions.middleware.SessionMiddleware',
-    'django.middleware.common.CommonMiddleware',
-    'django.middleware.csrf.CsrfViewMiddleware',
-    'django.contrib.auth.middleware.AuthenticationMiddleware',
-    'django.contrib.messages.middleware.MessageMiddleware',
-    'django.middleware.clickjacking.XFrameOptionsMiddleware',
+    "django.middleware.security.SecurityMiddleware",
+    "django.contrib.sessions.middleware.SessionMiddleware",
+    "django.middleware.common.CommonMiddleware",
+    "django.middleware.csrf.CsrfViewMiddleware",
+    "django.contrib.auth.middleware.AuthenticationMiddleware",
+    "django.contrib.messages.middleware.MessageMiddleware",
+    "django.middleware.clickjacking.XFrameOptionsMiddleware",
+    
+    # Add allauth's middleware here
+    "allauth.account.middleware.AccountMiddleware",
 ]
 
 ROOT_URLCONF = 'Sadaqa.urls'
 
 TEMPLATES = [
     {
-        'BACKEND': 'django.template.backends.django.DjangoTemplates',
-        'DIRS': [],
-        'APP_DIRS': True,
-        'OPTIONS': {
-            'context_processors': [
-                'django.template.context_processors.request',
-                'django.contrib.auth.context_processors.auth',
-                'django.contrib.messages.context_processors.messages',
+        "BACKEND": "django.template.backends.django.DjangoTemplates",
+        "DIRS": [
+            os.path.join(BASE_DIR, "templates"),  # For project-wide base.html
+        ],
+        "APP_DIRS": True,
+        "OPTIONS": {
+            "context_processors": [
+                "django.template.context_processors.request",
+                "django.contrib.auth.context_processors.auth",
+                "django.contrib.messages.context_processors.messages",
             ],
         },
     },
@@ -73,9 +103,13 @@ WSGI_APPLICATION = 'Sadaqa.wsgi.application'
 # https://docs.djangoproject.com/en/5.2/ref/settings/#databases
 
 DATABASES = {
-    'default': {
-        'ENGINE': 'django.db.backends.sqlite3',
-        'NAME': BASE_DIR / 'db.sqlite3',
+    "default": {
+        "ENGINE": "django.db.backends.postgresql",
+        "NAME": "sadqa",
+        "USER": "postgres",
+        "PASSWORD": "123",
+        "HOST": "localhost",
+        "PORT": "5432",
     }
 }
 
@@ -120,3 +154,15 @@ STATIC_URL = 'static/'
 # https://docs.djangoproject.com/en/5.2/ref/settings/#default-auto-field
 
 DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
+AUTH_USER_MODEL = "users.CustomUser"
+
+MEDIA_URL = "/media/"
+MEDIA_ROOT = BASE_DIR / "media"
+
+# Authentication
+LOGIN_URL = "login"
+LOGIN_REDIRECT_URL = "/"  # Where users go after successful login
+LOGOUT_REDIRECT_URL = "login"  # Redundant with next_page but safe
+
+# Sites Framework (if using social auth or flatpages)
+SITE_ID = 1

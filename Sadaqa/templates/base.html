@@ -1,0 +1,14 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>{% block title %}Sadqa{% endblock %}</title>
+    <!-- Add Bootstrap/CSS links here if needed -->
+</head>
+<body>
+    <div class="container">
+        {% block content %}
+        <!-- Child templates will override this block -->
+        {% endblock %}
+    </div>
+</body>
+</html>
