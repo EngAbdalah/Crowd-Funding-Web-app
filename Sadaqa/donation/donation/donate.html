@@ -1,0 +1,23 @@
+{% extends 'base.html' %}
+
+{% block content %}
+<div class="container mt-5">
+    <h2>Donate to {{ project.title }}</h2>
+    <div class="progress mb-4">
+        <div class="progress-bar" role="progressbar" 
+             style="width: {{ project.get_percentage_funded }}%">
+            {{ project.get_percentage_funded }}% funded
+        </div>
+    </div>
+    
+    <form method="POST">
+        {% csrf_token %}
+        <div class="form-group">
+            <label for="amount">Amount ({{ project.currency }})</label>
+            <input type="number" class="form-control" name="amount" 
+                   min="1" step="0.01" required>
+        </div>
+        <button type="submit" class="btn btn-primary mt-3">Donate Now</button>
+    </form>
+</div>
+{% endblock %}

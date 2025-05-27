@@ -1,6 +1,7 @@
 from django import forms
 from .models import Donation
 
+
 class DonationForm(forms.ModelForm):
     class Meta:
         model = Donation
@@ -9,7 +10,16 @@ class DonationForm(forms.ModelForm):
             'amount': forms.NumberInput(attrs={
                 'class': 'form-control',
                 'min': '1',
-                'step': '0.01'
+                'step': '0.01',
+                'placeholder': 'Enter amount'
             }),
-            'currency': forms.Select(attrs={'class': 'form-control'})
+            'currency': forms.Select(attrs={
+                'class': 'form-select'
+            })
         }
+
+    def clean_amount(self):
+        amount = self.cleaned_data.get('amount')
+        if amount <= 0:
+            raise forms.ValidationError("Donation amount must be positive")
+        return amount

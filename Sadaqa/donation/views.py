@@ -1,9 +1,9 @@
 from django.shortcuts import render, redirect, get_object_or_404
 from django.contrib.auth.decorators import login_required
 from django.contrib import messages
-from projects.models import Project
-from .forms import DonationForm
 from .models import Donation
+from .forms import DonationForm
+from projects.models import Project
 
 
 @login_required
@@ -18,12 +18,8 @@ def create_donation(request, project_id):
             donation.project = project
             donation.save()
 
-            # Update project current donations
-            project.current_donations += donation.amount
-            project.save()
-
-            messages.success(request, 'Thank you for your donation!')
-            return redirect('projects:project_detail', project_id=project.id)
+            # Send email receipt here (if implemented)
+            return redirect('donation:success', donation_id=donation.id)
     else:
         form = DonationForm()
 
@@ -31,3 +27,23 @@ def create_donation(request, project_id):
         'form': form,
         'project': project
     })
+
+
+@login_required
+def donation_success(request, donation_id):
+    donation = get_object_or_404(Donation, id=donation_id, donor=request.user)
+    return render(request, 'donation/success.html', {'donation': donation})
+
+
+@login_required
+def donation_history(request):
+    donations = Donation.objects.filter(donor=request.user) \
+        .select_related('project') \
+        .order_by('-donation_date')
+    return render(request, 'donation/history.html', {'donations': donations})
+
+
+@login_required
+def donation_receipt(request, pk):
+    donation = get_object_or_404(Donation, id=pk, donor=request.user)
+    return render(request, 'donation/receipt.html', {'donation': donation})

@@ -53,6 +53,7 @@ INSTALLED_APPS = [
     # Local apps
     "users.apps.UsersConfig",
     'donation',
+    'projects.apps.ProjectsConfig',
 ]
 
 
