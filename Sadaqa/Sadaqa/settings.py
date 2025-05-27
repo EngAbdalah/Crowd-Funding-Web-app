@@ -36,15 +36,15 @@ INSTALLED_APPS = [
     "django.contrib.admin",
     "django.contrib.auth",
     "django.contrib.contenttypes",
+    'phonenumber_field',
+    'django_countries',
     "django.contrib.sessions",
     "django.contrib.messages",
     "django.contrib.staticfiles",
     "django.contrib.sites",  # Added sites framework
 
     
-    "phonenumber_field",  # Adds phone number validation and formatting.
-    "django_countries",  # Simplifies country dropdowns and data storage (e.g., "EG" for Egypt).
-    # need to install pip install django-allauth to use the apps below
+
     "allauth",  # Core library for authentication (logins, signups)
     "allauth.account",  # Handles email/password-based accounts
     "allauth.socialaccount",  # Manages social media logins (Facebook, Google, etc.)
