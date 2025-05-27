@@ -163,7 +163,7 @@ MEDIA_ROOT = BASE_DIR / "media"
 
 # Authentication
 LOGIN_URL = "login"
-LOGIN_REDIRECT_URL = "/"  # Where users go after successful login
+LOGIN_REDIRECT_URL = 'donation:history'   # Where users go after successful login
 LOGOUT_REDIRECT_URL = "login"  # Redundant with next_page but safe
 
 # Sites Framework (if using social auth or flatpages)
