@@ -16,9 +16,8 @@ class CustomUser(AbstractUser):
     # password
     # first_name
     # last_name
-
-    phone = PhoneNumberField(unique=True,region="EG")
-    birthdate = models.DateField()
+    phone = PhoneNumberField(unique=True)
+    birthdate = models.DateField(null=False)
     pic = models.ImageField(upload_to="profile_pics/", null=True, blank=True)
     country = CountryField(default="EG")
 

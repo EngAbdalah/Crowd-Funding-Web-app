@@ -32,6 +32,10 @@ ALLOWED_HOSTS = []
 # Application definition
 
 INSTALLED_APPS = [
+    # Local apps
+    #added local apps first for best practice
+    "users.apps.UsersConfig",
+
     # Django core apps
     "django.contrib.admin",
     "django.contrib.auth",
@@ -40,8 +44,6 @@ INSTALLED_APPS = [
     "django.contrib.messages",
     "django.contrib.staticfiles",
     "django.contrib.sites",  # Added sites framework
-
-    
     "phonenumber_field",  # Adds phone number validation and formatting.
     "django_countries",  # Simplifies country dropdowns and data storage (e.g., "EG" for Egypt).
     # need to install pip install django-allauth to use the apps below
@@ -49,11 +51,13 @@ INSTALLED_APPS = [
     "allauth.account",  # Handles email/password-based accounts
     "allauth.socialaccount",  # Manages social media logins (Facebook, Google, etc.)
     "allauth.socialaccount.providers.facebook",  # Adds Facebook login support
-
-    # Local apps
-    "users.apps.UsersConfig",
+    "django_registration",  # package for Registers users; manages accounts.
+    "crispy_forms",
+    "crispy_bootstrap5",
 ]
 
+CRISPY_ALLOWED_TEMPLATE_PACKS = "bootstrap5"
+CRISPY_TEMPLATE_PACK = "bootstrap5"
 
 SOCIALACCOUNT_PROVIDERS = {
     "facebook": {  # Configure Facebook login
@@ -76,6 +80,34 @@ MIDDLEWARE = [
     # Add allauth's middleware here
     "allauth.account.middleware.AccountMiddleware",
 ]
+
+AUTHENTICATION_BACKENDS = [
+    "django.contrib.auth.backends.ModelBackend",  # Default Django backend
+    "allauth.account.auth_backends.AuthenticationBackend",  # AllAuth backend
+]
+
+# Sites Framework (if using social auth or flatpages)
+SITE_ID = 1
+
+# Email settings (for testing)
+EMAIL_BACKEND = (
+    "django.core.mail.backends.console.EmailBackend"  # Emails print to terminal
+)
+
+# Configure email verification
+# Force users to verify email before logging in
+ACCOUNT_EMAIL_VERIFICATION = "mandatory"  # Block login until email is confirmed
+ACCOUNT_EMAIL_CONFIRMATION_EXPIRE_DAYS = 1  # Activation link expires in 24 hours
+ACCOUNT_LOGIN_METHODS = {"email"}
+# The asterisk * means the field is required.
+ACCOUNT_SIGNUP_FIELDS = ["email*", "username*", "password1*", "password2*"] 
+
+PHONENUMBER_DEFAULT_REGION = "EG"
+ACCOUNT_ADAPTER = "users.adapters.CustomAccountAdapter"
+
+ACCOUNT_FORMS = {
+    "signup": "users.forms.CustomSignupForm",
+}
 
 ROOT_URLCONF = 'Sadaqa.urls'
 
@@ -149,7 +181,7 @@ USE_TZ = True
 # https://docs.djangoproject.com/en/5.2/howto/static-files/
 
 STATIC_URL = 'static/'
-
+# STATICFILES_DIRS = [BASE_DIR / "static"]  # if you have a static folder
 # Default primary key field type
 # https://docs.djangoproject.com/en/5.2/ref/settings/#default-auto-field
 
@@ -163,6 +195,3 @@ MEDIA_ROOT = BASE_DIR / "media"
 LOGIN_URL = "login"
 LOGIN_REDIRECT_URL = "/"  # Where users go after successful login
 LOGOUT_REDIRECT_URL = "login"  # Redundant with next_page but safe
-
-# Sites Framework (if using social auth or flatpages)
-SITE_ID = 1

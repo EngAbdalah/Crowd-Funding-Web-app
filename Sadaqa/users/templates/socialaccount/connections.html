@@ -1,0 +1,15 @@
+{% extends "base.html" %}
+{% load i18n %}
+
+{% block content %}
+    <h3>{% trans "Connected Social Accounts" %}</h3>
+    {% if socialaccounts %}
+        <ul>
+        {% for account in socialaccounts %}
+            <li>{{ account.provider }} - {{ account.uid }}</li>
+        {% endfor %}
+        </ul>
+    {% else %}
+        <p>{% trans "No social accounts connected." %}</p>
+    {% endif %}
+{% endblock %}
