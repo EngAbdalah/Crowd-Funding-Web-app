@@ -1,6 +1,7 @@
 from rest_framework import serializers
 from .models import Category, Project, ProjectTag, ProjectPic
 from users.models import CustomUser
+from django.utils import timezone
 
 class CategorySerializer(serializers.ModelSerializer):
     class Meta:
@@ -38,11 +39,19 @@ class ProjectSerializer(serializers.ModelSerializer):
         model = Project
         fields = [
             'id', 'user', 'category', 'title', 'details', 'total_target',
-            'start_date', 'end_date', 'is_cancelled', 'created_at',
+            'start_date', 'end_date', 'status', 'is_cancelled', 'created_at',
             'current_funding', 'funding_percentage', 'average_rating',
             'pictures', 'tags'
         ]
         read_only_fields = ['id', 'created_at', 'is_cancelled']
+    
+    def validate(self, data):
+        if 'start_date' in data and 'end_date' in data:
+            if data['start_date'] >= data['end_date']:
+                raise serializers.ValidationError("End date must be after start date")
+            if data['end_date'] <= timezone.now():
+                raise serializers.ValidationError("End date must be in the future")
+        return data
     
     def create(self, validated_data):
         pictures_data = validated_data.pop('pictures', [])

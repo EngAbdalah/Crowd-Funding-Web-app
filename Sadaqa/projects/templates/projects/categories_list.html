@@ -1,0 +1,365 @@
+{% extends "base.html" %}
+{% load static %}
+
+{% block title %}الفئات - صدقة{% endblock %}
+
+{% block content %}
+<!-- Page Header -->
+<div class="page-header">
+    <div class="container">
+        <div class="row align-items-center">
+            <div class="col-md-8">
+                <h1><i class="fas fa-tags me-3"></i>فئات المشاريع</h1>
+                <p>تصفح المشاريع حسب الفئات المختلفة</p>
+            </div>
+            <div class="col-md-4 text-end">
+                {% if user.is_authenticated %}
+                    <button class="btn btn-warning btn-lg" data-bs-toggle="modal" data-bs-target="#createCategoryModal">
+                        <i class="fas fa-plus me-2"></i>إضافة فئة جديدة
+                    </button>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="container">
+    <!-- Statistics -->
+    <div class="row mb-4">
+        <div class="col-md-3">
+            <div class="card bg-primary text-white">
+                <div class="card-body text-center">
+                    <h3>{{ categories|length }}</h3>
+                    <p class="mb-0">إجمالي الفئات</p>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="card bg-success text-white">
+                <div class="card-body text-center">
+                    <h3 id="activeProjectsCount">-</h3>
+                    <p class="mb-0">مشروع نشط</p>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="card bg-info text-white">
+                <div class="card-body text-center">
+                    <h3 id="totalFunding">-</h3>
+                    <p class="mb-0">إجمالي التمويل</p>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="card bg-warning text-white">
+                <div class="card-body text-center">
+                    <h3 id="completedProjects">-</h3>
+                    <p class="mb-0">مشروع مكتمل</p>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Categories Grid -->
+    <div class="row">
+        {% for category in categories %}
+        <div class="col-lg-4 col-md-6 mb-4">
+            <div class="card h-100 category-card" data-category-id="{{ category.id }}">
+                <div class="card-header bg-primary text-white">
+                    <div class="d-flex justify-content-between align-items-center">
+                        <h5 class="mb-0">
+                            <i class="fas fa-tag me-2"></i>{{ category.name }}
+                        </h5>
+                        {% if user.is_authenticated %}
+                            <div class="dropdown">
+                                <button class="btn btn-sm btn-outline-light" type="button" data-bs-toggle="dropdown">
+                                    <i class="fas fa-ellipsis-v"></i>
+                                </button>
+                                <ul class="dropdown-menu">
+                                    <li><a class="dropdown-item" href="#" onclick="editCategory({{ category.id }})">
+                                        <i class="fas fa-edit me-2"></i>تعديل
+                                    </a></li>
+                                    <li><a class="dropdown-item text-danger" href="#" onclick="deleteCategory({{ category.id }})">
+                                        <i class="fas fa-trash me-2"></i>حذف
+                                    </a></li>
+                                </ul>
+                            </div>
+                        {% endif %}
+                    </div>
+                </div>
+                <div class="card-body">
+                    <p class="card-text">{{ category.desc|truncatechars:100 }}</p>
+                    
+                    <!-- Category Stats -->
+                    <div class="row text-center mb-3">
+                        <div class="col-6">
+                            <div class="border-end">
+                                <h5 class="text-primary mb-0 category-projects-count" data-category="{{ category.id }}">0</h5>
+                                <small class="text-muted">مشروع</small>
+                            </div>
+                        </div>
+                        <div class="col-6">
+                            <h5 class="text-success mb-0 category-funding" data-category="{{ category.id }}">0</h5>
+                            <small class="text-muted">ج.م</small>
+                        </div>
+                    </div>
+                </div>
+                <div class="card-footer bg-transparent">
+                    <div class="d-flex justify-content-between align-items-center">
+                        <small class="text-muted">
+                            <i class="fas fa-calendar me-1"></i>
+                            تم الإنشاء مؤخراً
+                        </small>
+                        <a href="{% url 'category-detail-page' category.id %}" class="btn btn-primary btn-sm">
+                            <i class="fas fa-eye me-1"></i>عرض المشاريع
+                        </a>
+                    </div>
+                </div>
+            </div>
+        </div>
+        {% empty %}
+        <div class="col-12">
+            <div class="text-center py-5">
+                <i class="fas fa-tags fa-3x text-muted mb-3"></i>
+                <h4 class="text-muted">لا توجد فئات حالياً</h4>
+                <p class="text-muted">كن أول من ينشئ فئة للمشاريع</p>
+                {% if user.is_authenticated %}
+                    <button class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#createCategoryModal">
+                        <i class="fas fa-plus me-2"></i>إضافة فئة جديدة
+                    </button>
+                {% endif %}
+            </div>
+        </div>
+        {% endfor %}
+    </div>
+</div>
+
+<!-- Create Category Modal -->
+{% if user.is_authenticated %}
+<div class="modal fade" id="createCategoryModal" tabindex="-1">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">
+                    <i class="fas fa-plus me-2"></i>إضافة فئة جديدة
+                </h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body">
+                <form id="createCategoryForm">
+                    <div class="mb-3">
+                        <label class="form-label">اسم الفئة *</label>
+                        <input type="text" class="form-control" name="name" required>
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label">وصف الفئة *</label>
+                        <textarea class="form-control" name="desc" rows="4" required></textarea>
+                    </div>
+                </form>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">إلغاء</button>
+                <button type="button" class="btn btn-primary" onclick="createCategory()">
+                    <i class="fas fa-save me-2"></i>إضافة الفئة
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Edit Category Modal -->
+<div class="modal fade" id="editCategoryModal" tabindex="-1">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">
+                    <i class="fas fa-edit me-2"></i>تعديل الفئة
+                </h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body">
+                <form id="editCategoryForm">
+                    <input type="hidden" name="category_id">
+                    <div class="mb-3">
+                        <label class="form-label">اسم الفئة *</label>
+                        <input type="text" class="form-control" name="name" required>
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label">وصف الفئة *</label>
+                        <textarea class="form-control" name="desc" rows="4" required></textarea>
+                    </div>
+                </form>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">إلغاء</button>
+                <button type="button" class="btn btn-primary" onclick="updateCategory()">
+                    <i class="fas fa-save me-2"></i>حفظ التغييرات
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+{% endif %}
+{% endblock %}
+
+{% block extra_js %}
+<script>
+$(document).ready(function() {
+    // Load category statistics
+    loadCategoryStats();
+});
+
+// Load statistics for each category
+function loadCategoryStats() {
+    $('.category-card').each(function() {
+        const categoryId = $(this).data('category-id');
+        loadCategoryProjectStats(categoryId);
+    });
+}
+
+// Load project statistics for a specific category
+function loadCategoryProjectStats(categoryId) {
+    $.get('/api/projects/', { category: categoryId }, function(data) {
+        const projectsCount = data.length;
+        const totalFunding = data.reduce((sum, project) => sum + parseFloat(project.current_funding || 0), 0);
+        
+        $(`.category-projects-count[data-category="${categoryId}"]`).text(projectsCount);
+        $(`.category-funding[data-category="${categoryId}"]`).text(totalFunding.toLocaleString());
+    }).fail(function() {
+        console.error(`Failed to load stats for category ${categoryId}`);
+    });
+}
+
+// Create new category
+function createCategory() {
+    const form = $('#createCategoryForm')[0];
+    const formData = new FormData(form);
+    
+    const data = {
+        name: formData.get('name'),
+        desc: formData.get('desc')
+    };
+    
+    // Show loading
+    const submitBtn = $('#createCategoryModal .modal-footer .btn-primary');
+    const originalText = submitBtn.html();
+    submitBtn.html('<i class="fas fa-spinner fa-spin me-2"></i>جاري الإضافة...').prop('disabled', true);
+    
+    $.ajax({
+        url: '/api/categories/create/',
+        method: 'POST',
+        data: JSON.stringify(data),
+        contentType: 'application/json',
+        success: function(response) {
+            showSuccess('تم إضافة الفئة بنجاح!');
+            $('#createCategoryModal').modal('hide');
+            form.reset();
+            
+            // Reload page to show new category
+            setTimeout(() => {
+                location.reload();
+            }, 1500);
+        },
+        error: function(xhr) {
+            let errorMessage = 'حدث خطأ أثناء إضافة الفئة';
+            
+            if (xhr.responseJSON) {
+                const errors = xhr.responseJSON;
+                errorMessage = Object.values(errors).flat().join(', ');
+            }
+            
+            showError(errorMessage);
+        },
+        complete: function() {
+            submitBtn.html(originalText).prop('disabled', false);
+        }
+    });
+}
+
+// Edit category
+function editCategory(categoryId) {
+    // Load category data
+    $.get(`/api/categories/${categoryId}/`, function(data) {
+        $('#editCategoryForm input[name="category_id"]').val(categoryId);
+        $('#editCategoryForm input[name="name"]').val(data.name);
+        $('#editCategoryForm textarea[name="desc"]').val(data.desc);
+        $('#editCategoryModal').modal('show');
+    }).fail(function() {
+        showError('فشل في تحميل بيانات الفئة');
+    });
+}
+
+// Update category
+function updateCategory() {
+    const form = $('#editCategoryForm')[0];
+    const formData = new FormData(form);
+    const categoryId = formData.get('category_id');
+    
+    const data = {
+        name: formData.get('name'),
+        desc: formData.get('desc')
+    };
+    
+    // Show loading
+    const submitBtn = $('#editCategoryModal .modal-footer .btn-primary');
+    const originalText = submitBtn.html();
+    submitBtn.html('<i class="fas fa-spinner fa-spin me-2"></i>جاري الحفظ...').prop('disabled', true);
+    
+    $.ajax({
+        url: `/api/categories/${categoryId}/update/`,
+        method: 'PUT',
+        data: JSON.stringify(data),
+        contentType: 'application/json',
+        success: function(response) {
+            showSuccess('تم تحديث الفئة بنجاح!');
+            $('#editCategoryModal').modal('hide');
+            
+            // Reload page to show updated category
+            setTimeout(() => {
+                location.reload();
+            }, 1500);
+        },
+        error: function(xhr) {
+            let errorMessage = 'حدث خطأ أثناء تحديث الفئة';
+            
+            if (xhr.responseJSON) {
+                const errors = xhr.responseJSON;
+                errorMessage = Object.values(errors).flat().join(', ');
+            }
+            
+            showError(errorMessage);
+        },
+        complete: function() {
+            submitBtn.html(originalText).prop('disabled', false);
+        }
+    });
+}
+
+// Delete category
+function deleteCategory(categoryId) {
+    if (confirm('هل أنت متأكد من حذف هذه الفئة؟ سيتم حذف جميع المشاريع المرتبطة بها.')) {
+        $.ajax({
+            url: `/api/categories/${categoryId}/delete/`,
+            method: 'DELETE',
+            success: function() {
+                showSuccess('تم حذف الفئة بنجاح!');
+                
+                // Remove category card from DOM
+                $(`.category-card[data-category-id="${categoryId}"]`).fadeOut(500, function() {
+                    $(this).remove();
+                });
+            },
+            error: function(xhr) {
+                let errorMessage = 'حدث خطأ أثناء حذف الفئة';
+                
+                if (xhr.responseJSON) {
+                    errorMessage = xhr.responseJSON.error || errorMessage;
+                }
+                
+                showError(errorMessage);
+            }
+        });
+    }
+}
+</script>
+{% endblock %}

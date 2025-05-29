@@ -22,5 +22,15 @@ class CustomUser(AbstractUser):
     pic = models.ImageField(upload_to="profile_pics/", null=True, blank=True)
     country = CountryField(default="EG")
 
+    class Meta:
+        indexes = [
+            models.Index(fields=['email']),
+            models.Index(fields=['phone']),
+            models.Index(fields=['country']),
+            models.Index(fields=['is_active']),
+            models.Index(fields=['date_joined']),
+            models.Index(fields=['is_active', 'date_joined']),
+        ]
+
     def __str__(self):
         return self.username

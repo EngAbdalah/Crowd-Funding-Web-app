@@ -26,7 +26,7 @@ SECRET_KEY = 'django-insecure-rm5fm6d&@iqxzo733+-l9n=x3gir1i((l7@4qdg-*4kain9+qi
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = True
 
-ALLOWED_HOSTS = []
+ALLOWED_HOSTS = ['127.0.0.1', 'localhost', 'testserver']
 
 
 # Application definition
@@ -41,7 +41,8 @@ INSTALLED_APPS = [
     "django.contrib.staticfiles",
     "django.contrib.sites",  # Added sites framework
 
-    
+    # Third-party apps
+    "rest_framework",  # Django REST Framework for API development
     "phonenumber_field",  # Adds phone number validation and formatting.
     "django_countries",  # Simplifies country dropdowns and data storage (e.g., "EG" for Egypt).
     # need to install pip install django-allauth to use the apps below
@@ -52,6 +53,7 @@ INSTALLED_APPS = [
 
     # Local apps
     "users.apps.UsersConfig",
+    "projects.apps.ProjectsConfig",
 ]
 
 
@@ -72,7 +74,7 @@ MIDDLEWARE = [
     "django.contrib.auth.middleware.AuthenticationMiddleware",
     "django.contrib.messages.middleware.MessageMiddleware",
     "django.middleware.clickjacking.XFrameOptionsMiddleware",
-    
+
     # Add allauth's middleware here
     "allauth.account.middleware.AccountMiddleware",
 ]
@@ -163,6 +165,23 @@ MEDIA_ROOT = BASE_DIR / "media"
 LOGIN_URL = "login"
 LOGIN_REDIRECT_URL = "/"  # Where users go after successful login
 LOGOUT_REDIRECT_URL = "login"  # Redundant with next_page but safe
+
+# Django REST Framework Configuration
+REST_FRAMEWORK = {
+    'DEFAULT_AUTHENTICATION_CLASSES': [
+        'rest_framework.authentication.SessionAuthentication',
+        'rest_framework.authentication.BasicAuthentication',
+    ],
+    'DEFAULT_PERMISSION_CLASSES': [
+        'rest_framework.permissions.IsAuthenticatedOrReadOnly',
+    ],
+    'DEFAULT_PAGINATION_CLASS': 'rest_framework.pagination.PageNumberPagination',
+    'PAGE_SIZE': 20,
+    'DEFAULT_RENDERER_CLASSES': [
+        'rest_framework.renderers.JSONRenderer',
+        'rest_framework.renderers.BrowsableAPIRenderer',
+    ],
+}
 
 # Sites Framework (if using social auth or flatpages)
 SITE_ID = 1

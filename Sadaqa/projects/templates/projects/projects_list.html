@@ -1,0 +1,476 @@
+{% extends "base.html" %}
+{% load static %}
+
+{% block title %}المشاريع - صدقة{% endblock %}
+
+{% block content %}
+<!-- Page Header -->
+<div class="page-header">
+    <div class="container">
+        <div class="row align-items-center">
+            <div class="col-md-8">
+                <h1><i class="fas fa-heart me-3"></i>مشاريع صدقة</h1>
+                <p>ساعد في تحقيق الأحلام ومساعدة المحتاجين من خلال التبرع للمشاريع</p>
+            </div>
+            <div class="col-md-4 text-end">
+                {% if user.is_authenticated %}
+                    <button class="btn btn-warning btn-lg" data-bs-toggle="modal" data-bs-target="#createProjectModal">
+                        <i class="fas fa-plus me-2"></i>إنشاء مشروع جديد
+                    </button>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="container">
+    <!-- Filters and Search -->
+    <div class="row mb-4">
+        <div class="col-md-8">
+            <div class="card">
+                <div class="card-body">
+                    <div class="row g-3">
+                        <div class="col-md-4">
+                            <label class="form-label">البحث</label>
+                            <div class="input-group">
+                                <input type="text" class="form-control" id="searchInput" placeholder="ابحث في المشاريع...">
+                                <button class="btn btn-outline-primary" type="button" id="searchBtn">
+                                    <i class="fas fa-search"></i>
+                                </button>
+                            </div>
+                        </div>
+                        <div class="col-md-4">
+                            <label class="form-label">الفئة</label>
+                            <select class="form-select" id="categoryFilter">
+                                <option value="">جميع الفئات</option>
+                                <!-- Categories will be loaded dynamically -->
+                            </select>
+                        </div>
+                        <div class="col-md-4">
+                            <label class="form-label">الحالة</label>
+                            <select class="form-select" id="statusFilter">
+                                <option value="">جميع الحالات</option>
+                                <option value="active">نشط</option>
+                                <option value="completed">مكتمل</option>
+                                <option value="draft">مسودة</option>
+                            </select>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-4">
+            <div class="card bg-primary text-white">
+                <div class="card-body text-center">
+                    <h5><i class="fas fa-chart-line me-2"></i>إحصائيات سريعة</h5>
+                    <div class="row">
+                        <div class="col-6">
+                            <h3 id="totalProjects">{{ projects|length }}</h3>
+                            <small>مشروع</small>
+                        </div>
+                        <div class="col-6">
+                            <h3 id="activeProjects">-</h3>
+                            <small>نشط</small>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Projects Grid -->
+    <div class="row" id="projectsContainer">
+        {% for project in projects %}
+        <div class="col-lg-4 col-md-6 mb-4 project-card"
+             data-category="{{ project.category.id|default:'' }}"
+             data-status="{{ project.status }}"
+             data-title="{{ project.title|lower }}">
+            <div class="card h-100">
+                <!-- Project Image -->
+                <div class="position-relative">
+                    {% if project.pictures.all %}
+                        <img src="{{ project.pictures.0.pic.url }}"
+                             class="card-img-top"
+                             alt="{{ project.title }}"
+                             style="height: 220px; object-fit: cover;">
+                    {% else %}
+                        <div class="card-img-top d-flex align-items-center justify-content-center bg-light"
+                             style="height: 220px;">
+                            <i class="fas fa-image fa-3x text-muted"></i>
+                        </div>
+                    {% endif %}
+
+                    <!-- Status Badge -->
+                    <span class="position-absolute top-0 start-0 m-2">
+                        {% if project.status == 'active' %}
+                            <span class="badge bg-success">نشط</span>
+                        {% elif project.status == 'completed' %}
+                            <span class="badge bg-info">مكتمل</span>
+                        {% elif project.status == 'draft' %}
+                            <span class="badge bg-warning">مسودة</span>
+                        {% else %}
+                            <span class="badge bg-secondary">{{ project.get_status_display }}</span>
+                        {% endif %}
+                    </span>
+
+                    <!-- Category Badge -->
+                    {% if project.category %}
+                        <span class="position-absolute top-0 end-0 m-2">
+                            <span class="badge bg-primary">{{ project.category.name }}</span>
+                        </span>
+                    {% endif %}
+                </div>
+
+                <!-- Card Body -->
+                <div class="card-body d-flex flex-column">
+                    <h5 class="card-title">{{ project.title }}</h5>
+                    <p class="card-text text-muted flex-grow-1">
+                        {{ project.details|truncatechars:100 }}
+                    </p>
+
+                    <!-- Progress Bar -->
+                    <div class="mb-3">
+                        {% with funding_percentage=project.funding_percentage %}
+                            <div class="d-flex justify-content-between mb-1">
+                                <small class="text-muted">التقدم</small>
+                                <small class="text-muted">{{ funding_percentage|floatformat:1 }}%</small>
+                            </div>
+                            <div class="progress">
+                                <div class="progress-bar"
+                                     role="progressbar"
+                                     style="width: {{ funding_percentage|floatformat:1 }}%"
+                                     aria-valuenow="{{ funding_percentage|floatformat:1 }}"
+                                     aria-valuemin="0"
+                                     aria-valuemax="100">
+                                </div>
+                            </div>
+                        {% endwith %}
+                    </div>
+
+                    <!-- Funding Info -->
+                    <div class="row text-center mb-3">
+                        <div class="col-6">
+                            <div class="border-end">
+                                <h6 class="text-success mb-0">{{ project.current_funding|floatformat:0 }}</h6>
+                                <small class="text-muted">تم جمعه</small>
+                            </div>
+                        </div>
+                        <div class="col-6">
+                            <h6 class="text-primary mb-0">{{ project.total_target|floatformat:0 }}</h6>
+                            <small class="text-muted">الهدف</small>
+                        </div>
+                    </div>
+
+                    <!-- Tags -->
+                    {% if project.tags.all %}
+                        <div class="mb-3">
+                            {% for tag in project.tags.all|slice:":3" %}
+                                <span class="badge bg-light text-dark me-1">#{{ tag.tagname }}</span>
+                            {% endfor %}
+                            {% if project.tags.all|length > 3 %}
+                                <span class="badge bg-light text-dark">+{{ project.tags.all|length|add:"-3" }}</span>
+                            {% endif %}
+                        </div>
+                    {% endif %}
+                </div>
+
+                <!-- Card Footer -->
+                <div class="card-footer bg-transparent">
+                    <div class="d-flex justify-content-between align-items-center">
+                        <small class="text-muted">
+                            <i class="fas fa-calendar me-1"></i>
+                            {{ project.created_at|date:"d M Y" }}
+                        </small>
+                        <div>
+                            <a href="{% url 'project-detail-page' project.id %}"
+                               class="btn btn-primary btn-sm">
+                                <i class="fas fa-eye me-1"></i>عرض التفاصيل
+                            </a>
+                            {% if user.is_authenticated and user == project.user %}
+                                <button class="btn btn-outline-secondary btn-sm ms-1"
+                                        onclick="editProject({{ project.id }})">
+                                    <i class="fas fa-edit"></i>
+                                </button>
+                            {% endif %}
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        {% empty %}
+        <div class="col-12">
+            <div class="text-center py-5">
+                <i class="fas fa-heart fa-3x text-muted mb-3"></i>
+                <h4 class="text-muted">لا توجد مشاريع حالياً</h4>
+                <p class="text-muted">كن أول من ينشئ مشروعاً لمساعدة الآخرين</p>
+                {% if user.is_authenticated %}
+                    <button class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#createProjectModal">
+                        <i class="fas fa-plus me-2"></i>إنشاء مشروع جديد
+                    </button>
+                {% endif %}
+            </div>
+        </div>
+        {% endfor %}
+    </div>
+
+    <!-- Loading Spinner -->
+    <div class="text-center py-4 loading" id="loadingSpinner">
+        <div class="spinner-border text-primary" role="status">
+            <span class="visually-hidden">جاري التحميل...</span>
+        </div>
+    </div>
+</div>
+
+<!-- Create Project Modal -->
+{% if user.is_authenticated %}
+<div class="modal fade" id="createProjectModal" tabindex="-1">
+    <div class="modal-dialog modal-lg">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">
+                    <i class="fas fa-plus me-2"></i>إنشاء مشروع جديد
+                </h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body">
+                <form id="createProjectForm">
+                    <div class="row g-3">
+                        <div class="col-md-6">
+                            <label class="form-label">عنوان المشروع *</label>
+                            <input type="text" class="form-control" name="title" required>
+                        </div>
+                        <div class="col-md-6">
+                            <label class="form-label">الفئة *</label>
+                            <select class="form-select" name="category" required>
+                                <option value="">اختر الفئة</option>
+                                <!-- Categories will be loaded dynamically -->
+                            </select>
+                        </div>
+                        <div class="col-12">
+                            <label class="form-label">وصف المشروع *</label>
+                            <textarea class="form-control" name="details" rows="4" required></textarea>
+                        </div>
+                        <div class="col-md-4">
+                            <label class="form-label">المبلغ المطلوب (ج.م) *</label>
+                            <input type="number" class="form-control" name="total_target" min="1000" required>
+                        </div>
+                        <div class="col-md-4">
+                            <label class="form-label">تاريخ البداية *</label>
+                            <input type="datetime-local" class="form-control" name="start_date" required>
+                        </div>
+                        <div class="col-md-4">
+                            <label class="form-label">تاريخ النهاية *</label>
+                            <input type="datetime-local" class="form-control" name="end_date" required>
+                        </div>
+                    </div>
+                </form>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">إلغاء</button>
+                <button type="button" class="btn btn-primary" onclick="createProject()">
+                    <i class="fas fa-save me-2"></i>إنشاء المشروع
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+{% endif %}
+{% endblock %}
+
+{% block extra_js %}
+<script>
+$(document).ready(function() {
+    // Load categories for filters and form
+    loadCategories();
+
+    // Calculate active projects count
+    calculateStats();
+
+    // Search functionality
+    $('#searchInput').on('input', function() {
+        filterProjects();
+    });
+
+    $('#searchBtn').click(function() {
+        filterProjects();
+    });
+
+    // Filter functionality
+    $('#categoryFilter, #statusFilter').change(function() {
+        filterProjects();
+    });
+
+    // Enter key search
+    $('#searchInput').keypress(function(e) {
+        if (e.which == 13) {
+            filterProjects();
+        }
+    });
+});
+
+// Load categories from API
+function loadCategories() {
+    $.get('/api/categories/', function(data) {
+        const categoryFilter = $('#categoryFilter');
+        const categorySelect = $('select[name="category"]');
+
+        categoryFilter.empty().append('<option value="">جميع الفئات</option>');
+        categorySelect.empty().append('<option value="">اختر الفئة</option>');
+
+        data.forEach(function(category) {
+            const option = `<option value="${category.id}">${category.name}</option>`;
+            categoryFilter.append(option);
+            categorySelect.append(option);
+        });
+    }).fail(function() {
+        console.error('Failed to load categories');
+    });
+}
+
+// Calculate statistics
+function calculateStats() {
+    const totalProjects = $('.project-card').length;
+    const activeProjects = $('.project-card[data-status="active"]').length;
+
+    $('#totalProjects').text(totalProjects);
+    $('#activeProjects').text(activeProjects);
+}
+
+// Filter projects based on search and filters
+function filterProjects() {
+    const searchTerm = $('#searchInput').val().toLowerCase();
+    const categoryFilter = $('#categoryFilter').val();
+    const statusFilter = $('#statusFilter').val();
+
+    $('.project-card').each(function() {
+        const $card = $(this);
+        const title = $card.data('title');
+        const category = $card.data('category').toString();
+        const status = $card.data('status');
+
+        let show = true;
+
+        // Search filter
+        if (searchTerm && !title.includes(searchTerm)) {
+            show = false;
+        }
+
+        // Category filter
+        if (categoryFilter && category !== categoryFilter) {
+            show = false;
+        }
+
+        // Status filter
+        if (statusFilter && status !== statusFilter) {
+            show = false;
+        }
+
+        if (show) {
+            $card.show();
+        } else {
+            $card.hide();
+        }
+    });
+
+    // Show/hide empty state
+    const visibleCards = $('.project-card:visible').length;
+    if (visibleCards === 0) {
+        showEmptyState();
+    } else {
+        hideEmptyState();
+    }
+}
+
+// Show empty state
+function showEmptyState() {
+    if ($('#emptyState').length === 0) {
+        const emptyState = `
+            <div class="col-12" id="emptyState">
+                <div class="text-center py-5">
+                    <i class="fas fa-search fa-3x text-muted mb-3"></i>
+                    <h4 class="text-muted">لا توجد نتائج</h4>
+                    <p class="text-muted">جرب تغيير معايير البحث</p>
+                </div>
+            </div>
+        `;
+        $('#projectsContainer').append(emptyState);
+    }
+}
+
+// Hide empty state
+function hideEmptyState() {
+    $('#emptyState').remove();
+}
+
+// Create new project
+function createProject() {
+    const form = $('#createProjectForm')[0];
+    const formData = new FormData(form);
+
+    // Convert FormData to JSON
+    const data = {};
+    formData.forEach((value, key) => {
+        data[key] = value;
+    });
+
+    // Show loading
+    const submitBtn = $('.modal-footer .btn-primary');
+    const originalText = submitBtn.html();
+    submitBtn.html('<i class="fas fa-spinner fa-spin me-2"></i>جاري الإنشاء...').prop('disabled', true);
+
+    $.ajax({
+        url: '/api/projects/create/',
+        method: 'POST',
+        data: JSON.stringify(data),
+        contentType: 'application/json',
+        success: function(response) {
+            showSuccess('تم إنشاء المشروع بنجاح!');
+            $('#createProjectModal').modal('hide');
+            form.reset();
+
+            // Reload page to show new project
+            setTimeout(() => {
+                location.reload();
+            }, 1500);
+        },
+        error: function(xhr) {
+            let errorMessage = 'حدث خطأ أثناء إنشاء المشروع';
+
+            if (xhr.responseJSON) {
+                const errors = xhr.responseJSON;
+                errorMessage = Object.values(errors).flat().join(', ');
+            }
+
+            showError(errorMessage);
+        },
+        complete: function() {
+            submitBtn.html(originalText).prop('disabled', false);
+        }
+    });
+}
+
+// Edit project
+function editProject(projectId) {
+    // This will be implemented when we create the edit modal
+    console.log('Edit project:', projectId);
+    showSuccess('ميزة التعديل ستكون متاحة قريباً');
+}
+
+// Set minimum date for date inputs
+$(document).ready(function() {
+    const now = new Date();
+    const tomorrow = new Date(now.getTime() + 24 * 60 * 60 * 1000);
+    const minDate = tomorrow.toISOString().slice(0, 16);
+
+    $('input[name="start_date"]').attr('min', minDate);
+    $('input[name="end_date"]').attr('min', minDate);
+
+    // Update end date minimum when start date changes
+    $('input[name="start_date"]').change(function() {
+        const startDate = new Date($(this).val());
+        const minEndDate = new Date(startDate.getTime() + 24 * 60 * 60 * 1000);
+        $('input[name="end_date"]').attr('min', minEndDate.toISOString().slice(0, 16));
+    });
+});
+</script>
+{% endblock %}

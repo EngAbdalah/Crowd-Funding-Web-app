@@ -1,0 +1,528 @@
+{% extends "base.html" %}
+{% load static %}
+
+{% block title %}{{ project.title }} - صدقة{% endblock %}
+
+{% block content %}
+<!-- Project Header -->
+<div class="page-header">
+    <div class="container">
+        <div class="row align-items-center">
+            <div class="col-md-8">
+                <nav aria-label="breadcrumb">
+                    <ol class="breadcrumb text-white">
+                        <li class="breadcrumb-item">
+                            <a href="{% url 'projects-list-page' %}" class="text-white">
+                                <i class="fas fa-home me-1"></i>الرئيسية
+                            </a>
+                        </li>
+                        <li class="breadcrumb-item active text-white">{{ project.title }}</li>
+                    </ol>
+                </nav>
+                <h1><i class="fas fa-heart me-3"></i>{{ project.title }}</h1>
+                <p>{{ project.category.name|default:"غير محدد" }} • {{ project.created_at|date:"d M Y" }}</p>
+            </div>
+            <div class="col-md-4 text-end">
+                {% if user.is_authenticated and user == project.user %}
+                    <button class="btn btn-warning btn-lg me-2" onclick="editProject({{ project.id }})">
+                        <i class="fas fa-edit me-2"></i>تعديل المشروع
+                    </button>
+                {% endif %}
+                <button class="btn btn-success btn-lg" data-bs-toggle="modal" data-bs-target="#donateModal">
+                    <i class="fas fa-heart me-2"></i>تبرع الآن
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="container">
+    <div class="row">
+        <!-- Main Content -->
+        <div class="col-lg-8">
+            <!-- Project Images -->
+            <div class="card mb-4">
+                <div class="card-body p-0">
+                    {% if project.pictures.all %}
+                        <div id="projectCarousel" class="carousel slide" data-bs-ride="carousel">
+                            <div class="carousel-inner">
+                                {% for picture in project.pictures.all %}
+                                    <div class="carousel-item {% if forloop.first %}active{% endif %}">
+                                        <img src="{{ picture.pic.url }}"
+                                             class="d-block w-100"
+                                             alt="{{ project.title }}"
+                                             style="height: 400px; object-fit: cover;">
+                                    </div>
+                                {% endfor %}
+                            </div>
+                            {% if project.pictures.all|length > 1 %}
+                                <button class="carousel-control-prev" type="button" data-bs-target="#projectCarousel" data-bs-slide="prev">
+                                    <span class="carousel-control-prev-icon"></span>
+                                </button>
+                                <button class="carousel-control-next" type="button" data-bs-target="#projectCarousel" data-bs-slide="next">
+                                    <span class="carousel-control-next-icon"></span>
+                                </button>
+                                <div class="carousel-indicators">
+                                    {% for picture in project.pictures.all %}
+                                        <button type="button" data-bs-target="#projectCarousel"
+                                                data-bs-slide-to="{{ forloop.counter0 }}"
+                                                {% if forloop.first %}class="active"{% endif %}></button>
+                                    {% endfor %}
+                                </div>
+                            {% endif %}
+                        </div>
+                    {% else %}
+                        <div class="d-flex align-items-center justify-content-center bg-light" style="height: 400px;">
+                            <div class="text-center">
+                                <i class="fas fa-image fa-4x text-muted mb-3"></i>
+                                <p class="text-muted">لا توجد صور للمشروع</p>
+                            </div>
+                        </div>
+                    {% endif %}
+                </div>
+            </div>
+
+            <!-- Project Description -->
+            <div class="card mb-4">
+                <div class="card-header">
+                    <h5 class="mb-0"><i class="fas fa-info-circle me-2"></i>وصف المشروع</h5>
+                </div>
+                <div class="card-body">
+                    <div class="project-description">
+                        {{ project.details|linebreaks }}
+                    </div>
+                </div>
+            </div>
+
+            <!-- Project Tags -->
+            {% if project.tags.all %}
+                <div class="card mb-4">
+                    <div class="card-header">
+                        <h5 class="mb-0"><i class="fas fa-tags me-2"></i>العلامات</h5>
+                    </div>
+                    <div class="card-body">
+                        {% for tag in project.tags.all %}
+                            <span class="badge bg-primary me-2 mb-2 p-2">
+                                <i class="fas fa-tag me-1"></i>#{{ tag.tagname }}
+                            </span>
+                        {% endfor %}
+                    </div>
+                </div>
+            {% endif %}
+
+            <!-- Project Updates -->
+            <div class="card mb-4">
+                <div class="card-header d-flex justify-content-between align-items-center">
+                    <h5 class="mb-0"><i class="fas fa-bullhorn me-2"></i>تحديثات المشروع</h5>
+                    {% if user.is_authenticated and user == project.user %}
+                        <button class="btn btn-sm btn-outline-primary" onclick="addUpdate()">
+                            <i class="fas fa-plus me-1"></i>إضافة تحديث
+                        </button>
+                    {% endif %}
+                </div>
+                <div class="card-body">
+                    <div id="projectUpdates">
+                        <!-- Updates will be loaded here -->
+                        <div class="text-center text-muted py-4">
+                            <i class="fas fa-bullhorn fa-2x mb-3"></i>
+                            <p>لا توجد تحديثات حتى الآن</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Sidebar -->
+        <div class="col-lg-4">
+            <!-- Funding Progress -->
+            <div class="card mb-4 border-success">
+                <div class="card-header bg-success text-white">
+                    <h5 class="mb-0"><i class="fas fa-chart-line me-2"></i>تقدم التمويل</h5>
+                </div>
+                <div class="card-body">
+                    <!-- Progress Bar -->
+                    <div class="mb-3">
+                        {% with funding_percentage=project.funding_percentage %}
+                            <div class="d-flex justify-content-between mb-2">
+                                <span class="fw-bold">{{ funding_percentage|floatformat:1 }}%</span>
+                                <span class="text-muted">مكتمل</span>
+                            </div>
+                            <div class="progress mb-3" style="height: 12px;">
+                                <div class="progress-bar bg-success"
+                                     role="progressbar"
+                                     style="width: {{ funding_percentage|floatformat:1 }}%">
+                                </div>
+                            </div>
+                        {% endwith %}
+                    </div>
+
+                    <!-- Funding Stats -->
+                    <div class="row text-center mb-3">
+                        <div class="col-6">
+                            <div class="border-end">
+                                <h4 class="text-success mb-0">{{ project.current_funding|floatformat:0 }}</h4>
+                                <small class="text-muted">ج.م تم جمعه</small>
+                            </div>
+                        </div>
+                        <div class="col-6">
+                            <h4 class="text-primary mb-0">{{ project.total_target|floatformat:0 }}</h4>
+                            <small class="text-muted">ج.م الهدف</small>
+                        </div>
+                    </div>
+
+                    <div class="row text-center">
+                        <div class="col-6">
+                            <div class="border-end">
+                                <h5 class="text-info mb-0" id="donorsCount">0</h5>
+                                <small class="text-muted">متبرع</small>
+                            </div>
+                        </div>
+                        <div class="col-6">
+                            <h5 class="text-warning mb-0" id="daysLeft">-</h5>
+                            <small class="text-muted">يوم متبقي</small>
+                        </div>
+                    </div>
+
+                    <!-- Donate Button -->
+                    <button class="btn btn-success btn-lg w-100 mt-3"
+                            data-bs-toggle="modal"
+                            data-bs-target="#donateModal">
+                        <i class="fas fa-heart me-2"></i>تبرع الآن
+                    </button>
+                </div>
+            </div>
+
+            <!-- Project Details -->
+            <div class="card mb-4">
+                <div class="card-header">
+                    <h5 class="mb-0"><i class="fas fa-info me-2"></i>تفاصيل المشروع</h5>
+                </div>
+                <div class="card-body">
+                    <div class="row mb-2">
+                        <div class="col-5 text-muted">الفئة:</div>
+                        <div class="col-7">
+                            {% if project.category %}
+                                <span class="badge bg-primary">{{ project.category.name }}</span>
+                            {% else %}
+                                <span class="text-muted">غير محدد</span>
+                            {% endif %}
+                        </div>
+                    </div>
+                    <div class="row mb-2">
+                        <div class="col-5 text-muted">الحالة:</div>
+                        <div class="col-7">
+                            {% if project.status == 'active' %}
+                                <span class="badge bg-success">نشط</span>
+                            {% elif project.status == 'completed' %}
+                                <span class="badge bg-info">مكتمل</span>
+                            {% elif project.status == 'draft' %}
+                                <span class="badge bg-warning">مسودة</span>
+                            {% else %}
+                                <span class="badge bg-secondary">{{ project.get_status_display }}</span>
+                            {% endif %}
+                        </div>
+                    </div>
+                    <div class="row mb-2">
+                        <div class="col-5 text-muted">تاريخ البداية:</div>
+                        <div class="col-7">{{ project.start_date|date:"d M Y" }}</div>
+                    </div>
+                    <div class="row mb-2">
+                        <div class="col-5 text-muted">تاريخ النهاية:</div>
+                        <div class="col-7">{{ project.end_date|date:"d M Y" }}</div>
+                    </div>
+                    <div class="row mb-2">
+                        <div class="col-5 text-muted">منشئ المشروع:</div>
+                        <div class="col-7">
+                            <i class="fas fa-user me-1"></i>{{ project.user.get_full_name|default:project.user.username }}
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Share Project -->
+            <div class="card mb-4">
+                <div class="card-header">
+                    <h5 class="mb-0"><i class="fas fa-share-alt me-2"></i>شارك المشروع</h5>
+                </div>
+                <div class="card-body">
+                    <div class="d-grid gap-2">
+                        <button class="btn btn-primary" onclick="shareProject('facebook')">
+                            <i class="fab fa-facebook me-2"></i>شارك على فيسبوك
+                        </button>
+                        <button class="btn btn-info" onclick="shareProject('twitter')">
+                            <i class="fab fa-twitter me-2"></i>شارك على تويتر
+                        </button>
+                        <button class="btn btn-success" onclick="shareProject('whatsapp')">
+                            <i class="fab fa-whatsapp me-2"></i>شارك على واتساب
+                        </button>
+                        <button class="btn btn-secondary" onclick="copyLink()">
+                            <i class="fas fa-copy me-2"></i>نسخ الرابط
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Donate Modal -->
+<div class="modal fade" id="donateModal" tabindex="-1">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">
+                    <i class="fas fa-heart me-2"></i>تبرع لمشروع: {{ project.title }}
+                </h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body">
+                {% if user.is_authenticated %}
+                    <form id="donateForm">
+                        <div class="mb-3">
+                            <label class="form-label">مبلغ التبرع (ج.م) *</label>
+                            <div class="input-group">
+                                <input type="number" class="form-control" name="amount" min="10" required>
+                                <span class="input-group-text">ج.م</span>
+                            </div>
+                            <div class="form-text">الحد الأدنى للتبرع: 10 ج.م</div>
+                        </div>
+                        <div class="mb-3">
+                            <label class="form-label">رسالة (اختيارية)</label>
+                            <textarea class="form-control" name="message" rows="3"
+                                      placeholder="اكتب رسالة تشجيعية للمشروع..."></textarea>
+                        </div>
+                        <div class="mb-3">
+                            <div class="form-check">
+                                <input class="form-check-input" type="checkbox" name="anonymous" id="anonymousCheck">
+                                <label class="form-check-label" for="anonymousCheck">
+                                    تبرع مجهول
+                                </label>
+                            </div>
+                        </div>
+                    </form>
+                {% else %}
+                    <div class="text-center py-4">
+                        <i class="fas fa-sign-in-alt fa-3x text-muted mb-3"></i>
+                        <h5>يجب تسجيل الدخول للتبرع</h5>
+                        <p class="text-muted">قم بتسجيل الدخول أو إنشاء حساب جديد للمشاركة في التبرع</p>
+                        <a href="{% url 'login' %}" class="btn btn-primary">تسجيل الدخول</a>
+                    </div>
+                {% endif %}
+            </div>
+            {% if user.is_authenticated %}
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">إلغاء</button>
+                    <button type="button" class="btn btn-success" onclick="submitDonation()">
+                        <i class="fas fa-heart me-2"></i>تأكيد التبرع
+                    </button>
+                </div>
+            {% endif %}
+        </div>
+    </div>
+</div>
+
+<!-- Add Update Modal -->
+{% if user.is_authenticated and user == project.user %}
+<div class="modal fade" id="addUpdateModal" tabindex="-1">
+    <div class="modal-dialog modal-lg">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">
+                    <i class="fas fa-bullhorn me-2"></i>إضافة تحديث للمشروع
+                </h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body">
+                <form id="addUpdateForm">
+                    <div class="mb-3">
+                        <label class="form-label">عنوان التحديث *</label>
+                        <input type="text" class="form-control" name="title" required>
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label">محتوى التحديث *</label>
+                        <textarea class="form-control" name="content" rows="5" required></textarea>
+                    </div>
+                </form>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">إلغاء</button>
+                <button type="button" class="btn btn-primary" onclick="submitUpdate()">
+                    <i class="fas fa-save me-2"></i>نشر التحديث
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+{% endif %}
+{% endblock %}
+
+{% block extra_js %}
+<script>
+$(document).ready(function() {
+    // Calculate days left
+    calculateDaysLeft();
+
+    // Load project updates
+    loadProjectUpdates();
+
+    // Load donors count (placeholder)
+    $('#donorsCount').text('{{ project.donate_set.count|default:0 }}');
+});
+
+// Calculate days left until project end
+function calculateDaysLeft() {
+    const endDate = new Date('{{ project.end_date|date:"Y-m-d" }}');
+    const today = new Date();
+    const timeDiff = endDate.getTime() - today.getTime();
+    const daysDiff = Math.ceil(timeDiff / (1000 * 3600 * 24));
+
+    if (daysDiff > 0) {
+        $('#daysLeft').text(daysDiff);
+    } else {
+        $('#daysLeft').text('انتهى').addClass('text-danger');
+    }
+}
+
+// Load project updates
+function loadProjectUpdates() {
+    // This would typically load from an API endpoint
+    // For now, we'll show a placeholder
+    console.log('Loading project updates...');
+}
+
+// Submit donation
+function submitDonation() {
+    const form = $('#donateForm')[0];
+    const formData = new FormData(form);
+
+    // Convert FormData to JSON
+    const data = {
+        project: {{ project.id }},
+        amount: formData.get('amount'),
+        message: formData.get('message'),
+        anonymous: formData.get('anonymous') ? true : false
+    };
+
+    // Show loading
+    const submitBtn = $('.modal-footer .btn-success');
+    const originalText = submitBtn.html();
+    submitBtn.html('<i class="fas fa-spinner fa-spin me-2"></i>جاري المعالجة...').prop('disabled', true);
+
+    // Simulate donation API call
+    setTimeout(() => {
+        showSuccess('تم التبرع بنجاح! شكراً لك على مساهمتك الكريمة');
+        $('#donateModal').modal('hide');
+        form.reset();
+
+        // Update funding display (placeholder)
+        const currentFunding = parseFloat('{{ project.current_funding }}');
+        const donationAmount = parseFloat(data.amount);
+        const newFunding = currentFunding + donationAmount;
+
+        // This would typically be updated from server response
+        console.log('Donation submitted:', data);
+
+        submitBtn.html(originalText).prop('disabled', false);
+    }, 2000);
+}
+
+// Add project update
+function addUpdate() {
+    $('#addUpdateModal').modal('show');
+}
+
+// Submit project update
+function submitUpdate() {
+    const form = $('#addUpdateForm')[0];
+    const formData = new FormData(form);
+
+    const data = {
+        project: {{ project.id }},
+        title: formData.get('title'),
+        content: formData.get('content')
+    };
+
+    // Show loading
+    const submitBtn = $('#addUpdateModal .modal-footer .btn-primary');
+    const originalText = submitBtn.html();
+    submitBtn.html('<i class="fas fa-spinner fa-spin me-2"></i>جاري النشر...').prop('disabled', true);
+
+    // Simulate update API call
+    setTimeout(() => {
+        showSuccess('تم نشر التحديث بنجاح!');
+        $('#addUpdateModal').modal('hide');
+        form.reset();
+
+        // Reload updates
+        loadProjectUpdates();
+
+        submitBtn.html(originalText).prop('disabled', false);
+    }, 1500);
+}
+
+// Edit project
+function editProject(projectId) {
+    showSuccess('ميزة تعديل المشروع ستكون متاحة قريباً');
+}
+
+// Share project functions
+function shareProject(platform) {
+    const url = window.location.href;
+    const title = '{{ project.title|escapejs }}';
+    const text = 'ساعدني في دعم هذا المشروع: ' + title;
+
+    let shareUrl = '';
+
+    switch(platform) {
+        case 'facebook':
+            shareUrl = `https://www.facebook.com/sharer/sharer.php?u=${encodeURIComponent(url)}`;
+            break;
+        case 'twitter':
+            shareUrl = `https://twitter.com/intent/tweet?text=${encodeURIComponent(text)}&url=${encodeURIComponent(url)}`;
+            break;
+        case 'whatsapp':
+            shareUrl = `https://wa.me/?text=${encodeURIComponent(text + ' ' + url)}`;
+            break;
+    }
+
+    if (shareUrl) {
+        window.open(shareUrl, '_blank', 'width=600,height=400');
+    }
+}
+
+// Copy project link
+function copyLink() {
+    const url = window.location.href;
+
+    if (navigator.clipboard) {
+        navigator.clipboard.writeText(url).then(() => {
+            showSuccess('تم نسخ الرابط بنجاح!');
+        });
+    } else {
+        // Fallback for older browsers
+        const textArea = document.createElement('textarea');
+        textArea.value = url;
+        document.body.appendChild(textArea);
+        textArea.select();
+        document.execCommand('copy');
+        document.body.removeChild(textArea);
+        showSuccess('تم نسخ الرابط بنجاح!');
+    }
+}
+
+// Validate donation amount
+$('input[name="amount"]').on('input', function() {
+    const amount = parseFloat($(this).val());
+    const remaining = {{ project.total_target }} - {{ project.current_funding }};
+
+    if (amount > remaining) {
+        $(this).addClass('is-invalid');
+        $(this).siblings('.invalid-feedback').remove();
+        $(this).after('<div class="invalid-feedback">المبلغ أكبر من المبلغ المطلوب المتبقي</div>');
+    } else {
+        $(this).removeClass('is-invalid');
+        $(this).siblings('.invalid-feedback').remove();
+    }
+});
+</script>
+{% endblock %}

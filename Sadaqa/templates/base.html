@@ -1,14 +1,556 @@
 <!DOCTYPE html>
-<html>
+<html lang="ar" dir="rtl">
 <head>
-    <title>{% block title %}Sadqa{% endblock %}</title>
-    <!-- Add Bootstrap/CSS links here if needed -->
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{% block title %}صدقة - منصة التمويل الجماعي{% endblock %}</title>
+
+    <!-- Bootstrap 5 RTL CSS -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.rtl.min.css" rel="stylesheet">
+    <!-- Font Awesome Icons -->
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
+    <!-- Google Fonts - Arabic -->
+    <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@300;400;600;700&display=swap" rel="stylesheet">
+
+    <!-- Custom CSS -->
+    <style>
+        :root {
+            --primary-color: #2c5aa0;
+            --secondary-color: #f8f9fa;
+            --success-color: #28a745;
+            --warning-color: #ffc107;
+            --danger-color: #dc3545;
+            --info-color: #17a2b8;
+            --dark-color: #343a40;
+            --light-color: #f8f9fa;
+        }
+
+        body {
+            font-family: 'Cairo', sans-serif;
+            background-color: #f5f7fa;
+            line-height: 1.6;
+        }
+
+        .navbar-brand {
+            font-weight: 700;
+            font-size: 1.5rem;
+            color: var(--primary-color) !important;
+        }
+
+        .navbar {
+            background: linear-gradient(135deg, var(--primary-color) 0%, #1e3d72 100%);
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+        }
+
+        .navbar-nav .nav-link {
+            color: white !important;
+            font-weight: 500;
+            transition: all 0.3s ease;
+        }
+
+        .navbar-nav .nav-link:hover {
+            color: var(--warning-color) !important;
+            transform: translateY(-1px);
+        }
+
+        .card {
+            border: none;
+            border-radius: 15px;
+            box-shadow: 0 5px 15px rgba(0,0,0,0.08);
+            transition: all 0.3s ease;
+            overflow: hidden;
+        }
+
+        .card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 15px 35px rgba(0,0,0,0.15);
+        }
+
+        .btn {
+            border-radius: 25px;
+            font-weight: 600;
+            padding: 10px 25px;
+            transition: all 0.3s ease;
+        }
+
+        .btn-primary {
+            background: linear-gradient(135deg, var(--primary-color) 0%, #1e3d72 100%);
+            border: none;
+        }
+
+        .btn-primary:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(44, 90, 160, 0.4);
+        }
+
+        .progress {
+            height: 8px;
+            border-radius: 10px;
+            background-color: #e9ecef;
+        }
+
+        .progress-bar {
+            border-radius: 10px;
+            background: linear-gradient(90deg, var(--success-color) 0%, #20c997 100%);
+        }
+
+        .badge {
+            border-radius: 15px;
+            font-weight: 500;
+        }
+
+        .page-header {
+            background: linear-gradient(135deg, var(--primary-color) 0%, #1e3d72 100%);
+            color: white;
+            padding: 60px 0;
+            margin-bottom: 40px;
+            border-radius: 0 0 50px 50px;
+        }
+
+        .page-header h1 {
+            font-weight: 700;
+            margin-bottom: 10px;
+        }
+
+        .page-header p {
+            font-size: 1.1rem;
+            opacity: 0.9;
+        }
+
+        .section-title {
+            font-weight: 700;
+            color: var(--dark-color);
+            margin-bottom: 30px;
+            position: relative;
+        }
+
+        .section-title::after {
+            content: '';
+            position: absolute;
+            bottom: -10px;
+            right: 0;
+            width: 50px;
+            height: 3px;
+            background: var(--primary-color);
+            border-radius: 2px;
+        }
+
+        .footer {
+            background: var(--dark-color);
+            color: white;
+            padding: 40px 0;
+            margin-top: 60px;
+        }
+
+        .loading {
+            display: none;
+        }
+
+        .loading.show {
+            display: block;
+        }
+
+        .alert {
+            border-radius: 15px;
+            border: none;
+        }
+
+        .form-control, .form-select {
+            border-radius: 10px;
+            border: 2px solid #e9ecef;
+            padding: 12px 15px;
+            transition: all 0.3s ease;
+        }
+
+        .form-control:focus, .form-select:focus {
+            border-color: var(--primary-color);
+            box-shadow: 0 0 0 0.2rem rgba(44, 90, 160, 0.25);
+        }
+
+        .modal-content {
+            border-radius: 20px;
+            border: none;
+        }
+
+        .modal-header {
+            background: linear-gradient(135deg, var(--primary-color) 0%, #1e3d72 100%);
+            color: white;
+            border-radius: 20px 20px 0 0;
+        }
+
+        @media (max-width: 768px) {
+            .page-header {
+                padding: 40px 0;
+            }
+
+            .card {
+                margin-bottom: 20px;
+            }
+        }
+    </style>
+
+    {% block extra_css %}{% endblock %}
 </head>
 <body>
-    <div class="container">
+    <!-- Navigation -->
+    <nav class="navbar navbar-expand-lg navbar-dark">
+        <div class="container">
+            <a class="navbar-brand" href="{% url 'projects-list-page' %}">
+                <i class="fas fa-heart me-2"></i>صدقة
+            </a>
+
+            <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav">
+                <span class="navbar-toggler-icon"></span>
+            </button>
+
+            <div class="collapse navbar-collapse" id="navbarNav">
+                <ul class="navbar-nav me-auto">
+                    <li class="nav-item">
+                        <a class="nav-link" href="{% url 'projects-list-page' %}">
+                            <i class="fas fa-home me-1"></i>الرئيسية
+                        </a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" href="{% url 'categories-list-page' %}">
+                            <i class="fas fa-tags me-1"></i>الفئات
+                        </a>
+                    </li>
+                    <li class="nav-item">
+                        {% if user.is_authenticated %}
+                            <a class="nav-link" href="#" data-bs-toggle="modal" data-bs-target="#globalCreateProjectModal">
+                                <i class="fas fa-plus me-1"></i>إنشاء مشروع
+                            </a>
+                        {% else %}
+                            <a class="nav-link" href="{% url 'login' %}" title="يجب تسجيل الدخول لإنشاء مشروع">
+                                <i class="fas fa-plus me-1"></i>إنشاء مشروع
+                            </a>
+                        {% endif %}
+                    </li>
+                </ul>
+
+                <ul class="navbar-nav">
+                    {% if user.is_authenticated %}
+                        <li class="nav-item dropdown">
+                            <a class="nav-link dropdown-toggle" href="#" role="button" data-bs-toggle="dropdown">
+                                <i class="fas fa-user me-1"></i>{{ user.username }}
+                            </a>
+                            <ul class="dropdown-menu">
+                                <li><a class="dropdown-item" href="#"><i class="fas fa-user-edit me-2"></i>الملف الشخصي</a></li>
+                                <li><a class="dropdown-item" href="#"><i class="fas fa-project-diagram me-2"></i>مشاريعي</a></li>
+                                <li><hr class="dropdown-divider"></li>
+                                <li><a class="dropdown-item" href="{% url 'logout' %}"><i class="fas fa-sign-out-alt me-2"></i>تسجيل الخروج</a></li>
+                            </ul>
+                        </li>
+                    {% else %}
+                        <li class="nav-item">
+                            <a class="nav-link" href="{% url 'login' %}">
+                                <i class="fas fa-sign-in-alt me-1"></i>تسجيل الدخول
+                            </a>
+                        </li>
+                    {% endif %}
+                </ul>
+            </div>
+        </div>
+    </nav>
+
+    <!-- Messages -->
+    {% if messages %}
+        <div class="container mt-3">
+            {% for message in messages %}
+                <div class="alert alert-{{ message.tags }} alert-dismissible fade show" role="alert">
+                    <i class="fas fa-info-circle me-2"></i>{{ message }}
+                    <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+                </div>
+            {% endfor %}
+        </div>
+    {% endif %}
+
+    <!-- Main Content -->
+    <main>
         {% block content %}
         <!-- Child templates will override this block -->
         {% endblock %}
+    </main>
+
+    <!-- Footer -->
+    <footer class="footer">
+        <div class="container">
+            <div class="row">
+                <div class="col-md-6">
+                    <h5><i class="fas fa-heart me-2"></i>صدقة</h5>
+                    <p>منصة التمويل الجماعي لمساعدة المحتاجين وتحقيق الأحلام</p>
+                </div>
+                <div class="col-md-6 text-end">
+                    <h6>تواصل معنا</h6>
+                    <div class="social-links">
+                        <a href="#" class="text-white me-3"><i class="fab fa-facebook"></i></a>
+                        <a href="#" class="text-white me-3"><i class="fab fa-twitter"></i></a>
+                        <a href="#" class="text-white me-3"><i class="fab fa-instagram"></i></a>
+                    </div>
+                </div>
+            </div>
+            <hr class="my-4">
+            <div class="text-center">
+                <p>&copy; 2024 صدقة. جميع الحقوق محفوظة.</p>
+            </div>
+        </div>
+    </footer>
+
+    <!-- Bootstrap 5 JS -->
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    <!-- jQuery -->
+    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+
+    <!-- Custom JavaScript -->
+    <script>
+        // CSRF Token for AJAX requests
+        function getCookie(name) {
+            let cookieValue = null;
+            if (document.cookie && document.cookie !== '') {
+                const cookies = document.cookie.split(';');
+                for (let i = 0; i < cookies.length; i++) {
+                    const cookie = cookies[i].trim();
+                    if (cookie.substring(0, name.length + 1) === (name + '=')) {
+                        cookieValue = decodeURIComponent(cookie.substring(name.length + 1));
+                        break;
+                    }
+                }
+            }
+            return cookieValue;
+        }
+
+        const csrftoken = getCookie('csrftoken');
+
+        // Configure AJAX to include CSRF token
+        $.ajaxSetup({
+            beforeSend: function(xhr, settings) {
+                if (!(/^http:.*/.test(settings.url) || /^https:.*/.test(settings.url))) {
+                    xhr.setRequestHeader("X-CSRFToken", csrftoken);
+                }
+            }
+        });
+
+        // Show loading spinner
+        function showLoading(element) {
+            $(element).addClass('loading show');
+        }
+
+        // Hide loading spinner
+        function hideLoading(element) {
+            $(element).removeClass('loading show');
+        }
+
+        // Show success message
+        function showSuccess(message) {
+            const alert = `
+                <div class="alert alert-success alert-dismissible fade show" role="alert">
+                    <i class="fas fa-check-circle me-2"></i>${message}
+                    <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+                </div>
+            `;
+            $('.container').first().prepend(alert);
+        }
+
+        // Show error message
+        function showError(message) {
+            const alert = `
+                <div class="alert alert-danger alert-dismissible fade show" role="alert">
+                    <i class="fas fa-exclamation-circle me-2"></i>${message}
+                    <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+                </div>
+            `;
+            $('.container').first().prepend(alert);
+        }
+    </script>
+
+    {% block extra_js %}{% endblock %}
+
+    <!-- Global Create Project Modal -->
+    {% if user.is_authenticated %}
+    <div class="modal fade" id="globalCreateProjectModal" tabindex="-1">
+        <div class="modal-dialog modal-lg">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title">
+                        <i class="fas fa-plus me-2"></i>إنشاء مشروع جديد
+                    </h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                </div>
+                <div class="modal-body">
+                    <form id="globalCreateProjectForm">
+                        <div class="row g-3">
+                            <div class="col-md-6">
+                                <label class="form-label">عنوان المشروع *</label>
+                                <input type="text" class="form-control" name="title" required>
+                            </div>
+                            <div class="col-md-6">
+                                <label class="form-label">الفئة *</label>
+                                <select class="form-select" name="category" required>
+                                    <option value="">اختر الفئة</option>
+                                    <!-- Categories will be loaded dynamically -->
+                                </select>
+                            </div>
+                            <div class="col-12">
+                                <label class="form-label">وصف المشروع *</label>
+                                <textarea class="form-control" name="details" rows="4" required
+                                          placeholder="اكتب وصفاً مفصلاً عن مشروعك وأهدافه..."></textarea>
+                            </div>
+                            <div class="col-md-4">
+                                <label class="form-label">المبلغ المطلوب (ج.م) *</label>
+                                <input type="number" class="form-control" name="total_target" min="1000" required>
+                                <div class="form-text">الحد الأدنى: 1000 ج.م</div>
+                            </div>
+                            <div class="col-md-4">
+                                <label class="form-label">تاريخ البداية *</label>
+                                <input type="datetime-local" class="form-control" name="start_date" required>
+                            </div>
+                            <div class="col-md-4">
+                                <label class="form-label">تاريخ النهاية *</label>
+                                <input type="datetime-local" class="form-control" name="end_date" required>
+                            </div>
+                            <div class="col-12">
+                                <label class="form-label">حالة المشروع</label>
+                                <select class="form-select" name="status">
+                                    <option value="draft">مسودة</option>
+                                    <option value="active">نشط</option>
+                                </select>
+                                <div class="form-text">يمكنك البدء بمسودة ثم تفعيل المشروع لاحقاً</div>
+                            </div>
+                        </div>
+                    </form>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">إلغاء</button>
+                    <button type="button" class="btn btn-primary" onclick="createGlobalProject()">
+                        <i class="fas fa-save me-2"></i>إنشاء المشروع
+                    </button>
+                </div>
+            </div>
+        </div>
     </div>
+    {% endif %}
+
+    <!-- Global JavaScript for Create Project Modal -->
+    <script>
+        $(document).ready(function() {
+            // Load categories when modal is shown
+            $('#globalCreateProjectModal').on('show.bs.modal', function() {
+                loadGlobalCategories();
+                setGlobalMinDates();
+            });
+        });
+
+        // Load categories for the global modal
+        function loadGlobalCategories() {
+            $.get('/api/categories/', function(data) {
+                const categorySelect = $('#globalCreateProjectModal select[name="category"]');
+                categorySelect.empty().append('<option value="">اختر الفئة</option>');
+
+                data.forEach(function(category) {
+                    const option = `<option value="${category.id}">${category.name}</option>`;
+                    categorySelect.append(option);
+                });
+            }).fail(function() {
+                console.error('Failed to load categories');
+                showError('فشل في تحميل الفئات');
+            });
+        }
+
+        // Set minimum dates for the global modal
+        function setGlobalMinDates() {
+            const now = new Date();
+            const tomorrow = new Date(now.getTime() + 24 * 60 * 60 * 1000);
+            const minDate = tomorrow.toISOString().slice(0, 16);
+
+            $('#globalCreateProjectModal input[name="start_date"]').attr('min', minDate);
+            $('#globalCreateProjectModal input[name="end_date"]').attr('min', minDate);
+
+            // Update end date minimum when start date changes
+            $('#globalCreateProjectModal input[name="start_date"]').off('change.global').on('change.global', function() {
+                const startDate = new Date($(this).val());
+                const minEndDate = new Date(startDate.getTime() + 24 * 60 * 60 * 1000);
+                $('#globalCreateProjectModal input[name="end_date"]').attr('min', minEndDate.toISOString().slice(0, 16));
+            });
+        }
+
+        // Create new project from global modal
+        function createGlobalProject() {
+            const form = $('#globalCreateProjectForm')[0];
+            const formData = new FormData(form);
+
+            // Validate form
+            if (!form.checkValidity()) {
+                form.reportValidity();
+                return;
+            }
+
+            // Convert FormData to JSON
+            const data = {};
+            formData.forEach((value, key) => {
+                data[key] = value;
+            });
+
+            // Show loading
+            const submitBtn = $('#globalCreateProjectModal .modal-footer .btn-primary');
+            const originalText = submitBtn.html();
+            submitBtn.html('<i class="fas fa-spinner fa-spin me-2"></i>جاري الإنشاء...').prop('disabled', true);
+
+            $.ajax({
+                url: '/api/projects/create/',
+                method: 'POST',
+                data: JSON.stringify(data),
+                contentType: 'application/json',
+                success: function(response) {
+                    showSuccess('تم إنشاء المشروع بنجاح!');
+                    $('#globalCreateProjectModal').modal('hide');
+                    form.reset();
+
+                    // Redirect to the new project detail page
+                    setTimeout(() => {
+                        window.location.href = `/projects/page/${response.id}/`;
+                    }, 1500);
+                },
+                error: function(xhr) {
+                    let errorMessage = 'حدث خطأ أثناء إنشاء المشروع';
+
+                    if (xhr.responseJSON) {
+                        const errors = xhr.responseJSON;
+                        if (typeof errors === 'object') {
+                            errorMessage = Object.values(errors).flat().join(', ');
+                        } else {
+                            errorMessage = errors.toString();
+                        }
+                    }
+
+                    showError(errorMessage);
+                },
+                complete: function() {
+                    submitBtn.html(originalText).prop('disabled', false);
+                }
+            });
+        }
+
+        // Enhanced error handling for global modal
+        function validateGlobalProjectForm() {
+            const form = $('#globalCreateProjectForm')[0];
+            const startDate = new Date($('#globalCreateProjectModal input[name="start_date"]').val());
+            const endDate = new Date($('#globalCreateProjectModal input[name="end_date"]').val());
+
+            // Check if end date is after start date
+            if (endDate <= startDate) {
+                showError('تاريخ النهاية يجب أن يكون بعد تاريخ البداية');
+                return false;
+            }
+
+            // Check if dates are in the future
+            const now = new Date();
+            if (startDate <= now) {
+                showError('تاريخ البداية يجب أن يكون في المستقبل');
+                return false;
+            }
+
+            return form.checkValidity();
+        }
+    </script>
 </body>
 </html>

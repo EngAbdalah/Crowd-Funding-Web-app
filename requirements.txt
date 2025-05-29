@@ -1,0 +1,31 @@
+# Core Django Framework
+Django==5.2.1
+
+# Django REST Framework for API development
+djangorestframework==3.15.2
+
+# Authentication and Social Login
+django-allauth==0.61.1
+
+# Phone number validation and formatting
+django-phonenumber-field==7.3.0
+phonenumbers==8.13.30
+
+# Country field support
+django-countries==7.5.1
+
+# Image processing (for ImageField)
+Pillow==10.2.0
+
+# PostgreSQL database adapter
+psycopg2-binary==2.9.9
+
+# Environment variables management
+python-dotenv==1.0.1
+
+# Additional dependencies for production (optional)
+# gunicorn==21.2.0  # WSGI HTTP Server for production
+# whitenoise==6.6.0  # Static file serving for production
+# django-cors-headers==4.3.1  # CORS handling for API
+# celery==5.3.4  # Task queue for background jobs
+# redis==5.0.1  # Cache and message broker

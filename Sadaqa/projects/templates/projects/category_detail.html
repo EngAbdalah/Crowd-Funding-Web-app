@@ -1,0 +1,436 @@
+{% extends "base.html" %}
+{% load static %}
+
+{% block title %}{{ category.name }} - صدقة{% endblock %}
+
+{% block content %}
+<!-- Page Header -->
+<div class="page-header">
+    <div class="container">
+        <div class="row align-items-center">
+            <div class="col-md-8">
+                <nav aria-label="breadcrumb">
+                    <ol class="breadcrumb text-white">
+                        <li class="breadcrumb-item">
+                            <a href="{% url 'projects-list-page' %}" class="text-white">
+                                <i class="fas fa-home me-1"></i>الرئيسية
+                            </a>
+                        </li>
+                        <li class="breadcrumb-item">
+                            <a href="{% url 'categories-list-page' %}" class="text-white">
+                                <i class="fas fa-tags me-1"></i>الفئات
+                            </a>
+                        </li>
+                        <li class="breadcrumb-item active text-white">{{ category.name }}</li>
+                    </ol>
+                </nav>
+                <h1><i class="fas fa-tag me-3"></i>{{ category.name }}</h1>
+                <p>{{ category.desc }}</p>
+            </div>
+            <div class="col-md-4 text-end">
+                {% if user.is_authenticated %}
+                    <button class="btn btn-warning btn-lg" data-bs-toggle="modal" data-bs-target="#createProjectModal">
+                        <i class="fas fa-plus me-2"></i>إضافة مشروع في هذه الفئة
+                    </button>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="container">
+    <!-- Category Statistics -->
+    <div class="row mb-4">
+        <div class="col-md-3">
+            <div class="card bg-primary text-white">
+                <div class="card-body text-center">
+                    <h3>{{ projects|length }}</h3>
+                    <p class="mb-0">مشروع نشط</p>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="card bg-success text-white">
+                <div class="card-body text-center">
+                    <h3 id="totalFunding">0</h3>
+                    <p class="mb-0">ج.م إجمالي التمويل</p>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="card bg-info text-white">
+                <div class="card-body text-center">
+                    <h3 id="totalTarget">0</h3>
+                    <p class="mb-0">ج.م إجمالي الأهداف</p>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="card bg-warning text-white">
+                <div class="card-body text-center">
+                    <h3 id="avgProgress">0%</h3>
+                    <p class="mb-0">متوسط التقدم</p>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Projects in this Category -->
+    <div class="card mb-4">
+        <div class="card-header">
+            <div class="d-flex justify-content-between align-items-center">
+                <h5 class="mb-0">
+                    <i class="fas fa-project-diagram me-2"></i>المشاريع في فئة {{ category.name }}
+                </h5>
+                <div class="d-flex gap-2">
+                    <select class="form-select form-select-sm" id="sortProjects" style="width: auto;">
+                        <option value="newest">الأحدث</option>
+                        <option value="oldest">الأقدم</option>
+                        <option value="funding_high">التمويل (الأعلى)</option>
+                        <option value="funding_low">التمويل (الأقل)</option>
+                        <option value="progress_high">التقدم (الأعلى)</option>
+                        <option value="progress_low">التقدم (الأقل)</option>
+                    </select>
+                </div>
+            </div>
+        </div>
+        <div class="card-body">
+            <div class="row" id="projectsContainer">
+                {% for project in projects %}
+                <div class="col-lg-4 col-md-6 mb-4 project-card" 
+                     data-created="{{ project.created_at|date:'Y-m-d' }}"
+                     data-funding="{{ project.current_funding }}"
+                     data-progress="{{ project.funding_percentage }}">
+                    <div class="card h-100">
+                        <!-- Project Image -->
+                        <div class="position-relative">
+                            {% if project.pictures.all %}
+                                <img src="{{ project.pictures.0.pic.url }}" 
+                                     class="card-img-top" 
+                                     alt="{{ project.title }}" 
+                                     style="height: 200px; object-fit: cover;">
+                            {% else %}
+                                <div class="card-img-top d-flex align-items-center justify-content-center bg-light" 
+                                     style="height: 200px;">
+                                    <i class="fas fa-image fa-3x text-muted"></i>
+                                </div>
+                            {% endif %}
+                            
+                            <!-- Status Badge -->
+                            <span class="position-absolute top-0 start-0 m-2">
+                                {% if project.status == 'active' %}
+                                    <span class="badge bg-success">نشط</span>
+                                {% elif project.status == 'completed' %}
+                                    <span class="badge bg-info">مكتمل</span>
+                                {% else %}
+                                    <span class="badge bg-warning">{{ project.get_status_display }}</span>
+                                {% endif %}
+                            </span>
+                        </div>
+
+                        <!-- Card Body -->
+                        <div class="card-body d-flex flex-column">
+                            <h6 class="card-title">{{ project.title }}</h6>
+                            <p class="card-text text-muted flex-grow-1 small">
+                                {{ project.details|truncatechars:80 }}
+                            </p>
+
+                            <!-- Progress Bar -->
+                            <div class="mb-3">
+                                {% with funding_percentage=project.funding_percentage %}
+                                    <div class="d-flex justify-content-between mb-1">
+                                        <small class="text-muted">التقدم</small>
+                                        <small class="text-muted">{{ funding_percentage|floatformat:1 }}%</small>
+                                    </div>
+                                    <div class="progress" style="height: 6px;">
+                                        <div class="progress-bar" 
+                                             role="progressbar" 
+                                             style="width: {{ funding_percentage|floatformat:1 }}%">
+                                        </div>
+                                    </div>
+                                {% endwith %}
+                            </div>
+
+                            <!-- Funding Info -->
+                            <div class="row text-center mb-2">
+                                <div class="col-6">
+                                    <div class="border-end">
+                                        <small class="text-success d-block">{{ project.current_funding|floatformat:0 }}</small>
+                                        <small class="text-muted">تم جمعه</small>
+                                    </div>
+                                </div>
+                                <div class="col-6">
+                                    <small class="text-primary d-block">{{ project.total_target|floatformat:0 }}</small>
+                                    <small class="text-muted">الهدف</small>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Card Footer -->
+                        <div class="card-footer bg-transparent">
+                            <div class="d-flex justify-content-between align-items-center">
+                                <small class="text-muted">
+                                    {{ project.created_at|date:"d M" }}
+                                </small>
+                                <a href="{% url 'project-detail-page' project.id %}" 
+                                   class="btn btn-primary btn-sm">
+                                    <i class="fas fa-eye me-1"></i>عرض
+                                </a>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                {% empty %}
+                <div class="col-12">
+                    <div class="text-center py-5">
+                        <i class="fas fa-project-diagram fa-3x text-muted mb-3"></i>
+                        <h5 class="text-muted">لا توجد مشاريع في هذه الفئة حالياً</h5>
+                        <p class="text-muted">كن أول من ينشئ مشروعاً في فئة {{ category.name }}</p>
+                        {% if user.is_authenticated %}
+                            <button class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#createProjectModal">
+                                <i class="fas fa-plus me-2"></i>إنشاء مشروع جديد
+                            </button>
+                        {% endif %}
+                    </div>
+                </div>
+                {% endfor %}
+            </div>
+        </div>
+    </div>
+
+    <!-- Related Categories -->
+    <div class="card">
+        <div class="card-header">
+            <h5 class="mb-0">
+                <i class="fas fa-tags me-2"></i>فئات أخرى قد تهمك
+            </h5>
+        </div>
+        <div class="card-body">
+            <div id="relatedCategories">
+                <!-- Related categories will be loaded here -->
+                <div class="text-center py-3">
+                    <div class="spinner-border text-primary" role="status">
+                        <span class="visually-hidden">جاري التحميل...</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Create Project Modal -->
+{% if user.is_authenticated %}
+<div class="modal fade" id="createProjectModal" tabindex="-1">
+    <div class="modal-dialog modal-lg">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">
+                    <i class="fas fa-plus me-2"></i>إنشاء مشروع في فئة {{ category.name }}
+                </h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body">
+                <form id="createProjectForm">
+                    <input type="hidden" name="category" value="{{ category.id }}">
+                    <div class="row g-3">
+                        <div class="col-12">
+                            <label class="form-label">عنوان المشروع *</label>
+                            <input type="text" class="form-control" name="title" required>
+                        </div>
+                        <div class="col-12">
+                            <label class="form-label">وصف المشروع *</label>
+                            <textarea class="form-control" name="details" rows="4" required></textarea>
+                        </div>
+                        <div class="col-md-4">
+                            <label class="form-label">المبلغ المطلوب (ج.م) *</label>
+                            <input type="number" class="form-control" name="total_target" min="1000" required>
+                        </div>
+                        <div class="col-md-4">
+                            <label class="form-label">تاريخ البداية *</label>
+                            <input type="datetime-local" class="form-control" name="start_date" required>
+                        </div>
+                        <div class="col-md-4">
+                            <label class="form-label">تاريخ النهاية *</label>
+                            <input type="datetime-local" class="form-control" name="end_date" required>
+                        </div>
+                    </div>
+                </form>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">إلغاء</button>
+                <button type="button" class="btn btn-primary" onclick="createProject()">
+                    <i class="fas fa-save me-2"></i>إنشاء المشروع
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+{% endif %}
+{% endblock %}
+
+{% block extra_js %}
+<script>
+$(document).ready(function() {
+    // Calculate category statistics
+    calculateCategoryStats();
+    
+    // Load related categories
+    loadRelatedCategories();
+    
+    // Sort functionality
+    $('#sortProjects').change(function() {
+        sortProjects($(this).val());
+    });
+    
+    // Set minimum date for date inputs
+    const now = new Date();
+    const tomorrow = new Date(now.getTime() + 24 * 60 * 60 * 1000);
+    const minDate = tomorrow.toISOString().slice(0, 16);
+    
+    $('input[name="start_date"]').attr('min', minDate);
+    $('input[name="end_date"]').attr('min', minDate);
+    
+    // Update end date minimum when start date changes
+    $('input[name="start_date"]').change(function() {
+        const startDate = new Date($(this).val());
+        const minEndDate = new Date(startDate.getTime() + 24 * 60 * 60 * 1000);
+        $('input[name="end_date"]').attr('min', minEndDate.toISOString().slice(0, 16));
+    });
+});
+
+// Calculate category statistics
+function calculateCategoryStats() {
+    let totalFunding = 0;
+    let totalTarget = 0;
+    let totalProgress = 0;
+    const projectCount = $('.project-card').length;
+    
+    $('.project-card').each(function() {
+        const funding = parseFloat($(this).data('funding')) || 0;
+        const progress = parseFloat($(this).data('progress')) || 0;
+        
+        totalFunding += funding;
+        totalProgress += progress;
+        
+        // Calculate target from funding and progress
+        if (progress > 0) {
+            totalTarget += (funding / progress) * 100;
+        }
+    });
+    
+    $('#totalFunding').text(totalFunding.toLocaleString());
+    $('#totalTarget').text(totalTarget.toLocaleString());
+    
+    if (projectCount > 0) {
+        const avgProgress = totalProgress / projectCount;
+        $('#avgProgress').text(avgProgress.toFixed(1) + '%');
+    }
+}
+
+// Load related categories
+function loadRelatedCategories() {
+    $.get('/api/categories/', function(data) {
+        const currentCategoryId = {{ category.id }};
+        const relatedCategories = data.filter(cat => cat.id !== currentCategoryId).slice(0, 4);
+        
+        let html = '<div class="row">';
+        relatedCategories.forEach(function(category) {
+            html += `
+                <div class="col-md-3 mb-3">
+                    <div class="card">
+                        <div class="card-body text-center">
+                            <h6 class="card-title">${category.name}</h6>
+                            <p class="card-text small text-muted">${category.desc.substring(0, 50)}...</p>
+                            <a href="/categories/page/${category.id}/" class="btn btn-outline-primary btn-sm">
+                                <i class="fas fa-eye me-1"></i>عرض
+                            </a>
+                        </div>
+                    </div>
+                </div>
+            `;
+        });
+        html += '</div>';
+        
+        $('#relatedCategories').html(html);
+    }).fail(function() {
+        $('#relatedCategories').html('<p class="text-muted text-center">فشل في تحميل الفئات المرتبطة</p>');
+    });
+}
+
+// Sort projects
+function sortProjects(sortBy) {
+    const container = $('#projectsContainer');
+    const projects = container.children('.project-card').get();
+    
+    projects.sort(function(a, b) {
+        switch(sortBy) {
+            case 'newest':
+                return new Date($(b).data('created')) - new Date($(a).data('created'));
+            case 'oldest':
+                return new Date($(a).data('created')) - new Date($(b).data('created'));
+            case 'funding_high':
+                return parseFloat($(b).data('funding')) - parseFloat($(a).data('funding'));
+            case 'funding_low':
+                return parseFloat($(a).data('funding')) - parseFloat($(b).data('funding'));
+            case 'progress_high':
+                return parseFloat($(b).data('progress')) - parseFloat($(a).data('progress'));
+            case 'progress_low':
+                return parseFloat($(a).data('progress')) - parseFloat($(b).data('progress'));
+            default:
+                return 0;
+        }
+    });
+    
+    $.each(projects, function(index, item) {
+        container.append(item);
+    });
+}
+
+// Create new project
+function createProject() {
+    const form = $('#createProjectForm')[0];
+    const formData = new FormData(form);
+    
+    // Convert FormData to JSON
+    const data = {};
+    formData.forEach((value, key) => {
+        data[key] = value;
+    });
+    
+    // Show loading
+    const submitBtn = $('#createProjectModal .modal-footer .btn-primary');
+    const originalText = submitBtn.html();
+    submitBtn.html('<i class="fas fa-spinner fa-spin me-2"></i>جاري الإنشاء...').prop('disabled', true);
+    
+    $.ajax({
+        url: '/api/projects/create/',
+        method: 'POST',
+        data: JSON.stringify(data),
+        contentType: 'application/json',
+        success: function(response) {
+            showSuccess('تم إنشاء المشروع بنجاح!');
+            $('#createProjectModal').modal('hide');
+            form.reset();
+            
+            // Reload page to show new project
+            setTimeout(() => {
+                location.reload();
+            }, 1500);
+        },
+        error: function(xhr) {
+            let errorMessage = 'حدث خطأ أثناء إنشاء المشروع';
+            
+            if (xhr.responseJSON) {
+                const errors = xhr.responseJSON;
+                errorMessage = Object.values(errors).flat().join(', ');
+            }
+            
+            showError(errorMessage);
+        },
+        complete: function() {
+            submitBtn.html(originalText).prop('disabled', false);
+        }
+    });
+}
+</script>
+{% endblock %}
