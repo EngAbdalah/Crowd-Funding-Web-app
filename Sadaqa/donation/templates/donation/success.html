@@ -1,22 +1,26 @@
-{% extends 'base.html' %}
+
+
+
+
+
+{% extends "base.html" %}
+
+{% block title %}Donation Successful{% endblock %}
 
 {% block content %}
-<div class="container mt-5">
-    <div class="alert alert-success">
-        <h3><i class="fas fa-check-circle"></i> Thank you for your donation!</h3>
-        <hr>
-        <p>You donated <strong>{{ donation.amount }} {{ donation.currency }}</strong> 
-           to <a href="{% url 'projects:detail' donation.project.id %}">{{ donation.project.title }}</a></p>
-        <p>Transaction Date: {{ donation.donation_date|date:"F j, Y H:i" }}</p>
-        
-        <div class="mt-4">
-            <a href="{% url 'projects:detail' donation.project.id %}" class="btn btn-outline-primary">
-                Back to Project
-            </a>
-            <a href="{% url 'donation:history' %}" class="btn btn-outline-secondary ml-2">
-                View Donation History
-            </a>
-        </div>
-    </div>
+<div class="alert alert-success">
+    <h4>Thank you for your donation!</h4>
+    <p>Your contribution has been received successfully.</p>
+    <a href="{% url 'donation:create' %}" class="btn btn-primary">
+        Make Another Donation
+    </a>
 </div>
 {% endblock %}
+
+
+
+
+
+
+
+
