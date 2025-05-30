@@ -31,6 +31,23 @@ def comment_detail(request, pk):
 
     if request.method == 'DELETE':
         if comment.user != request.user:
-            return Response({"error": "ليس لديك صلاحية حذف هذا التعليق"}, status=status.HTTP_403_FORBIDDEN)
+            return Response({"error": "no permission"}, status=status.HTTP_403_FORBIDDEN)
         comment.delete()
         return Response(status=status.HTTP_204_NO_CONTENT)
+
+
+@api_view(['GET', 'POST'])
+@permission_classes([permissions.IsAuthenticatedOrReadOnly])
+def reply_list(request):
+    if request.method == 'GET':
+        comment_id = request.query_params.get('comment_id')
+        replies = Reply.objects.filter(comment_id=comment_id) if comment_id else Reply.objects.all()
+        serializer = ReplySerializer(replies, many=True)
+        return Response(serializer.data)
+
+    elif request.method == 'POST':
+        serializer = ReplySerializer(data=request.data)
+        if serializer.is_valid():
+            serializer.save(user=request.user)
+            return Response(serializer.data, status=status.HTTP_201_CREATED)
+        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
