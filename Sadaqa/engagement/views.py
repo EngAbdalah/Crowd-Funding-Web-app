@@ -85,3 +85,18 @@ def rate_list(request):
             serializer.save(user=request.user)
             return Response(serializer.data, status=status.HTTP_201_CREATED)
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+
+
+@api_view(['DELETE'])
+@permission_classes([permissions.IsAuthenticated])
+def rate_detail(request, pk):
+    try:
+        rate = Rate.objects.get(pk=pk)
+    except Rate.DoesNotExist:
+        return Response(status=status.HTTP_404_NOT_FOUND)
+
+    if request.method == 'DELETE':
+        if rate.user != request.user:
+            return Response({"error": "no permission"}, status=status.HTTP_403_FORBIDDEN)
+        rate.delete()
+        return Response(status=status.HTTP_204_NO_CONTENT)
