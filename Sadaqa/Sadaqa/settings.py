@@ -36,6 +36,8 @@ INSTALLED_APPS = [
     #added local apps first for best practice
     "users.apps.UsersConfig",
     "projects.apps.ProjectsConfig",
+    'engagement.apps.EngagementConfig',
+
     # Django core apps
     "django.contrib.admin",
     "django.contrib.auth",
@@ -54,7 +56,6 @@ INSTALLED_APPS = [
     "django_registration",  # package for Registers users; manages accounts.
     "crispy_forms",
     "crispy_bootstrap5",
-    'engagement.apps.EngagementConfig',
     'rest_framework',
 ]
 

@@ -9,7 +9,7 @@ from .serializers import CommentSerializer, ReplySerializer, RateSerializer
 def comment_list(request):
     if request.method == 'GET':
         project_id = request.query_params.get('project_id')
-        comments = Comment.objects.filter(project_id=project_id) if project_id else Comment.objects.all()
+        comments = Comment.objects.filter(project_id=project_id)
         serializer = CommentSerializer(comments, many=True)
         return Response(serializer.data)
 
@@ -41,7 +41,7 @@ def comment_detail(request, pk):
 def reply_list(request):
     if request.method == 'GET':
         comment_id = request.query_params.get('comment_id')
-        replies = Reply.objects.filter(comment_id=comment_id) if comment_id else Reply.objects.all()
+        replies = Reply.objects.filter(comment_id=comment_id)
         serializer = ReplySerializer(replies, many=True)
         return Response(serializer.data)
 
@@ -100,3 +100,49 @@ def rate_detail(request, pk):
             return Response({"error": "no permission"}, status=status.HTTP_403_FORBIDDEN)
         rate.delete()
         return Response(status=status.HTTP_204_NO_CONTENT)
+
+
+@api_view(['POST'])
+@permission_classes([permissions.IsAuthenticated])
+def create_comment(request, project_id):
+    try:
+        project = Project.objects.get(pk=project_id)
+    except Project.DoesNotExist:
+        return Response(
+            {'error': 'not found'},
+            status=status.HTTP_404_NOT_FOUND
+        )
+
+    serializer = CommentSerializer(data=request.data)
+    if serializer.is_valid():
+        serializer.save(user=request.user, project=project)
+        return Response({
+            'status': 'success',
+            'message': 'added',
+            'data': serializer.data
+        }, status=status.HTTP_201_CREATED)
+
+    return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+
+
+@api_view(['POST'])
+@permission_classes([permissions.IsAuthenticated])
+def create_reply(request, comment_id):
+    try:
+        comment = Comment.objects.get(pk=comment_id)
+    except Comment.DoesNotExist:
+        return Response(
+            {'error': 'not found'},
+            status=status.HTTP_404_NOT_FOUND
+        )
+
+    serializer = ReplySerializer(data=request.data)
+    if serializer.is_valid():
+        serializer.save(user=request.user, comment=comment)
+        return Response({
+            'status': 'success',
+            'message': 'added',
+            'data': serializer.data
+        }, status=status.HTTP_201_CREATED)
+
+    return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
