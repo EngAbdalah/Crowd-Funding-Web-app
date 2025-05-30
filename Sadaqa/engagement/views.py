@@ -66,3 +66,22 @@ def reply_detail(request, pk):
             return Response({"error": "no permission"}, status=status.HTTP_403_FORBIDDEN)
         reply.delete()
         return Response(status=status.HTTP_204_NO_CONTENT)
+
+
+@api_view(['GET', 'POST'])
+@permission_classes([permissions.IsAuthenticated])
+def rate_list(request):
+    if request.method == 'GET':
+        rates = Rate.objects.all()
+        serializer = RateSerializer(rates, many=True)
+        return Response(serializer.data)
+
+    elif request.method == 'POST':
+        if Rate.objects.filter(user=request.user, project=request.data.get('project')).exists():
+            return Response({"error": "already ratedً"}, status=status.HTTP_400_BAD_REQUEST)
+
+        serializer = RateSerializer(data=request.data)
+        if serializer.is_valid():
+            serializer.save(user=request.user)
+            return Response(serializer.data, status=status.HTTP_201_CREATED)
+        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
