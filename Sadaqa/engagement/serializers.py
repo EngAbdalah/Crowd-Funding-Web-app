@@ -12,3 +12,13 @@ class CommentSerializer(serializers.ModelSerializer):
         model = Comment
         fields = '__all__'
         read_only_fields = ('created_at',)
+
+
+class ReplySerializer(serializers.ModelSerializer):
+    user = UserSerializer(read_only=True)
+    comment = CommentSerializer(read_only=True)
+
+    class Meta:
+        model = Reply
+        fields = '__all__'
+        read_only_fields = ('created_at',)
