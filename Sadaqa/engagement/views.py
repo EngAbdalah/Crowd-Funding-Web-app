@@ -51,3 +51,18 @@ def reply_list(request):
             serializer.save(user=request.user)
             return Response(serializer.data, status=status.HTTP_201_CREATED)
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+
+
+@api_view(['DELETE'])
+@permission_classes([permissions.IsAuthenticated])
+def reply_detail(request, pk):
+    try:
+        reply = Reply.objects.get(pk=pk)
+    except Reply.DoesNotExist:
+        return Response(status=status.HTTP_404_NOT_FOUND)
+
+    if request.method == 'DELETE':
+        if reply.user != request.user:
+            return Response({"error": "no permission"}, status=status.HTTP_403_FORBIDDEN)
+        reply.delete()
+        return Response(status=status.HTTP_204_NO_CONTENT)
