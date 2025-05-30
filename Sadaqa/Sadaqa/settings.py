@@ -54,6 +54,7 @@ INSTALLED_APPS = [
     "django_registration",  # package for Registers users; manages accounts.
     "crispy_forms",
     "crispy_bootstrap5",
+    'engagement.apps.EngagementConfig',
 ]
 
 CRISPY_ALLOWED_TEMPLATE_PACKS = "bootstrap5"
