@@ -35,7 +35,7 @@ INSTALLED_APPS = [
     # Local apps
     #added local apps first for best practice
     "users.apps.UsersConfig",
-
+    "projects.apps.ProjectsConfig",
     # Django core apps
     "django.contrib.admin",
     "django.contrib.auth",
@@ -137,7 +137,7 @@ WSGI_APPLICATION = 'Sadaqa.wsgi.application'
 DATABASES = {
     "default": {
         "ENGINE": "django.db.backends.postgresql",
-        "NAME": "sadqa",
+        "NAME": "funding",
         "USER": "postgres",
         "PASSWORD": "123",
         "HOST": "localhost",

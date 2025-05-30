@@ -1,0 +1,13 @@
+django
+pillow
+psycopg2-binary
+django-phonenumber-field
+django-crispy-forms
+django-allauth
+crispy-bootstrap5
+phonenumbers
+pyjwt
+requests
+django-countries
+django-registration==3.3
+cryptography==41.0.7
