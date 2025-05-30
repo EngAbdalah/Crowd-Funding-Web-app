@@ -20,3 +20,16 @@ class Reply(models.Model):
 
     def __str__(self):
         return f"Reply by {self.user.username} to {self.comment}"
+
+class Rate(models.Model):
+    STAR_CHOICES = [(i, i) for i in range(1, 6)]
+    stars = models.IntegerField(choices=STAR_CHOICES)
+    project = models.ForeignKey(Project, on_delete=models.CASCADE)
+    user = models.ForeignKey(CustomUser, on_delete=models.CASCADE)
+    created_at = models.DateTimeField(auto_now_add=True)
+
+    class Meta:
+        unique_together = ('project', 'user')
+
+    def __str__(self):
+        return f"{self.stars} stars by {self.user.username} for {self.project.title}"
