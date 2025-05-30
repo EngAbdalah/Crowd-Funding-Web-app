@@ -22,3 +22,13 @@ class ReplySerializer(serializers.ModelSerializer):
         model = Reply
         fields = '__all__'
         read_only_fields = ('created_at',)
+
+
+class RateSerializer(serializers.ModelSerializer):
+    user = UserSerializer(read_only=True)
+    project = ProjectSerializer(read_only=True)
+
+    class Meta:
+        model = Rate
+        fields = '__all__'
+        read_only_fields = ('created_at',)
