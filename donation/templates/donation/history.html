@@ -1,0 +1,8 @@
+<h2>Your Donation History</h2>
+<ul>
+    {% for donation in donations %}
+    <li>{{ donation.date }} - {{ donation.project }} - {{ donation.amount }} {{ donation.currency }}</li>
+    {% endfor %}
+</ul><br>
+<a href="{% url 'donate' %}" class="btn btn-primary">Donate Again</a>
+

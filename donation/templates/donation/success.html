@@ -1,0 +1,9 @@
+<h2>Donation Successful!</h2>
+<p>User ID: {{ donation.user.id }}</p>
+<p>Project: {{ donation.project }}</p>
+<p>Amount: {{ donation.amount }} {{ donation.currency }}</p>
+<p>Date: {{ donation.date }}</p>
+<a href="{% url 'history' %}">View Donation History</a>
+<br>
+<a href="{% url 'donate' %}" class="btn btn-primary">Donate Again</a>
+
