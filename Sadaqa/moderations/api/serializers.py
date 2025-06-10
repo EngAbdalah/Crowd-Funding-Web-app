@@ -36,7 +36,7 @@ class ReportSerializer(serializers.ModelSerializer):
         # status: Always starts as "pending"
         # created_at: Automatic timestamp
         # is_reviewed: Starts as False (unreviewed)
-        read_only_fields = ["status", "created_at", "is_reviewed"]
+        read_only_fields = [ "created_at", "is_reviewed"]
 
         # 🚫 No Empty Complaints: Must provide a reason
         extra_kwargs = {
@@ -59,12 +59,18 @@ class ReportSerializer(serializers.ModelSerializer):
             raise serializers.ValidationError(
                 {"comment": "You have already reported this comment"}
             )
-
+        val = attrs.get("status")
+        if(val == "reviewed" or val == "dismissed"):
+            
+            attrs["is_reviewed"] = True
+        else:
+            attrs["is_reviewed"] = False
         #
         # During validation (occuring above ⬆️⬆️⬆️)
         # → created_at doesn't exist yet → it's None (NULL)
         # Makes timestamp available early
         attrs.setdefault("created_at", timezone.now())
+
 
         return attrs
 

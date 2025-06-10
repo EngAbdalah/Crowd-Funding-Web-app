@@ -13,7 +13,8 @@ https://docs.djangoproject.com/en/5.2/ref/settings/
 from pathlib import Path
 import os
 from django.urls import reverse_lazy
-
+from datetime import timedelta
+ 
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
 BASE_DIR = Path(__file__).resolve().parent.parent
 
@@ -63,6 +64,7 @@ INSTALLED_APPS = [
     "allauth.account",  # Handles email/password-based accounts
     "allauth.socialaccount",  # Manages social media logins (Facebook, Google, etc.)
     "allauth.socialaccount.providers.facebook",  # Adds Facebook login support
+    'corsheaders',
 ]
 
 AUTHENTICATION_BACKENDS = [
@@ -83,15 +85,22 @@ SOCIALACCOUNT_PROVIDERS = {
 MIDDLEWARE = [
     "django.middleware.security.SecurityMiddleware",
     "django.contrib.sessions.middleware.SessionMiddleware",
+    'corsheaders.middleware.CorsMiddleware',
     "django.middleware.common.CommonMiddleware",
     "django.middleware.csrf.CsrfViewMiddleware",
     "django.contrib.auth.middleware.AuthenticationMiddleware",
     "django.contrib.messages.middleware.MessageMiddleware",
     "django.middleware.clickjacking.XFrameOptionsMiddleware",
 
+
     # Add allauth's middleware here
     "allauth.account.middleware.AccountMiddleware",
 ]
+#///////////////////////////////////
+CORS_ALLOWED_ORIGINS = [
+    "http://localhost:3000",
+]
+
 
 ROOT_URLCONF = 'Sadaqa.urls'
 
@@ -250,3 +259,9 @@ ACCOUNT_DELETE_PASSWORD_CONFIRMATION = True
 
 MEDIA_URL = "/media/"
 MEDIA_ROOT = BASE_DIR / "media"
+
+SIMPLE_JWT = {
+    "ACCESS_TOKEN_LIFETIME": timedelta(hours=10), 
+    "REFRESH_TOKEN_LIFETIME": timedelta(days=7),
+
+}
