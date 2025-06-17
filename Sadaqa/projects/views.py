@@ -39,14 +39,14 @@ def project_create(request):
     return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
 
-@api_view(['PUT'])
+@api_view(['PUT','PATCH'])
 def project_update(request, pk):
     try:
         project = Project.objects.get(pk=pk)
     except Project.DoesNotExist:
         return Response({'error': 'Project not found'}, status=status.HTTP_404_NOT_FOUND)
 
-    serializer = ProjectSerializer(project, data=request.data)
+    serializer = ProjectSerializer(project, data=request.data , context={'request': request})
     if serializer.is_valid():
         serializer.save()
         return Response(serializer.data)

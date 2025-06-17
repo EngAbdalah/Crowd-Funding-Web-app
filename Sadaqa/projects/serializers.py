@@ -11,7 +11,7 @@ class CategorySerializer(serializers.ModelSerializer):
 class ProjectPicSerializer(serializers.ModelSerializer):
     class Meta:
         model = ProjectPic
-        fields = ['id', 'pic']
+        fields = ['id', 'pic','project']
         read_only_fields = ['id']
 
 class ProjectTagSerializer(serializers.ModelSerializer):
